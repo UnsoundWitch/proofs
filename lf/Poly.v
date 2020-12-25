@@ -151,6 +151,7 @@ Inductive grumble (X:Type) : Type :=
       - [d (b a 5)]
       - [d mumble (b a 5)]
       - [d bool (b a 5)]
+
       - [e bool true]
       - [e mumble (b c 0)]
       - [e bool (b c 0)]
@@ -393,7 +394,12 @@ Definition list123''' := [1; 2; 3].
 Theorem app_nil_r : forall (X:Type), forall l:list X,
   l ++ [] = l.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros X l.
+  induction l as [|hd tl IHl].
+  - reflexivity.
+  - simpl. rewrite -> IHl.
+    reflexivity.
+Qed.
 
 Theorem app_assoc : forall A (l m n:list A),
   l ++ m ++ n = (l ++ m) ++ n.
@@ -503,13 +509,18 @@ Fixpoint combine {X Y : Type} (lx : list X) (ly : list Y)
     given unit test. *)
 
 Fixpoint split {X Y : Type} (l : list (X*Y))
-               : (list X) * (list Y)
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+  : (list X) * (list Y) :=
+  match l with
+  | (x, y) :: tl => let tl' := split tl in (x :: fst tl', y :: snd tl')
+  | nil => (nil, nil)
+  end.
+  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *)
 
 Example test_split:
   split [(1,false);(2,false)] = ([1;2],[false;false]).
 Proof.
-(* FILL IN HERE *) Admitted.
+  reflexivity.
+Qed.
 (** [] *)
 
 (* ================================================================= *)
@@ -695,6 +706,7 @@ Example test_filter_even_gt7_1 :
 
 Example test_filter_even_gt7_2 :
   filter_even_gt7 [5;2;6;19;129] = [].
+simpl.
  (* FILL IN HERE *) Admitted.
 (** [] *)
 
@@ -768,10 +780,25 @@ Proof. reflexivity. Qed.
     Show that [map] and [rev] commute.  You may need to define an
     auxiliary lemma. *)
 
+Theorem map_involutive: forall (X Y : Type) (f : X -> Y) (j k : list X),
+    map f (j ++ k) = map f j ++ map f k.
+Proof.
+  intros X Y f j k.
+  induction j.
+  - reflexivity.
+  - simpl. rewrite -> IHj. reflexivity.
+Qed.
+
 Theorem map_rev : forall (X Y : Type) (f : X -> Y) (l : list X),
   map f (rev l) = rev (map f l).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros X Y f l.
+  induction l.
+  - reflexivity.
+  - simpl. rewrite -> map_involutive.
+    rewrite -> IHl.
+    reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, especially useful (flat_map) 
@@ -787,13 +814,18 @@ Proof.
 *)
 
 Fixpoint flat_map {X Y: Type} (f: X -> list Y) (l: list X)
-                   : (list Y)
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+  : (list Y) :=
+  match l with
+  | nil => nil
+  | hd :: tl => f hd ++ flat_map f tl
+  end.
+  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *)
 
 Example test_flat_map1:
   flat_map (fun n => [n;n;n]) [1;5;4]
   = [1; 1; 1; 5; 5; 5; 4; 4; 4].
- (* FILL IN HERE *) Admitted.
+reflexivity.
+Qed.
 (** [] *)
 
 (** Lists are not the only inductive type for which [map] makes sense.
@@ -948,7 +980,10 @@ Proof. reflexivity. Qed.
 Theorem fold_length_correct : forall X (l : list X),
   fold_length l = length l.
 Proof.
-(* FILL IN HERE *) Admitted.
+  intros X l. induction l.
+  - reflexivity.
+  - simpl. rewrite <- IHl. reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, standard (fold_map) 
@@ -994,8 +1029,8 @@ Definition prod_curry {X Y Z : Type}
     the theorems below to show that the two are inverses. *)
 
 Definition prod_uncurry {X Y Z : Type}
-  (f : X -> Y -> Z) (p : X * Y) : Z
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+  (f : X -> Y -> Z) (p : X * Y) : Z := f (fst p) (snd p).
+  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *)
 
 (** As a (trivial) example of the usefulness of currying, we can use it
     to shorten one of the examples that we saw above: *)
@@ -1014,13 +1049,18 @@ Theorem uncurry_curry : forall (X Y Z : Type)
                         x y,
   prod_curry (prod_uncurry f) x y = f x y.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros X Y Z f x y.
+  reflexivity.
+Qed.
+  (* FILL IN HERE *) 
 
 Theorem curry_uncurry : forall (X Y Z : Type)
                         (f : (X * Y) -> Z) (p : X * Y),
   prod_uncurry (prod_curry f) p = f p.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros X Y Z f p. destruct p.
+  reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, advanced (nth_error_informal) 
@@ -1086,11 +1126,11 @@ Definition three : cnat := @doit3times.
 (** Successor of a natural number: given a Church numeral [n],
     the successor [succ n] is a function that iterates its
     argument once more than [n]. *)
-Definition succ (n : cnat) : cnat
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Definition succ (n : cnat) : cnat :=
+  fun (X : Type) (f : X -> X) (x : X) => n X f (f x).
 
 Example succ_1 : succ zero = one.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 Example succ_2 : succ one = two.
 Proof. (* FILL IN HERE *) Admitted.
@@ -1103,35 +1143,37 @@ Proof. (* FILL IN HERE *) Admitted.
 (** **** Exercise: 1 star, advanced (church_plus)  *)
 
 (** Addition of two natural numbers: *)
-Definition plus (n m : cnat) : cnat
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Definition plus (n m : cnat) : cnat :=
+  fun X f x => n X f (m X f x).
+ 
 
 Example plus_1 : plus zero one = one.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. simpl. reflexivity. Qed.
 
 Example plus_2 : plus two three = plus three two.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 Example plus_3 :
   plus (plus two two) three = plus one (plus three three).
-Proof. (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 (** [] *)
 
 (** **** Exercise: 2 stars, advanced (church_mult)  *)
 
 (** Multiplication: *)
-Definition mult (n m : cnat) : cnat
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Definition mult (n m : cnat) : cnat :=
+  fun X f x => n X (m X f) x.
+(* REPLACE THIS LINE WITH ":= _your_definition_ ." *)
 
 Example mult_1 : mult one one = one.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. (* FILL IN HERE *) reflexivity. Qed.
 
 Example mult_2 : mult zero (plus three three) = zero.
 Proof. (* FILL IN HERE *) Admitted.
 
 Example mult_3 : mult two three = plus three three.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. (* FILL IN HERE *) reflexivity. Qed.
 
 (** [] *)
 
@@ -1144,11 +1186,9 @@ Proof. (* FILL IN HERE *) Admitted.
     a "Universe inconsistency" error, try iterating over a different
     type.  Iterating over [cnat] itself is usually problematic.) *)
 
-Definition exp (n m : cnat) : cnat
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
-
+Definition exp (n m : cnat) : cnat. Admitted.
 Example exp_1 : exp two two = plus two two.
-Proof. (* FILL IN HERE *) Admitted.
+Proof.  Admitted.
 
 Example exp_2 : exp three zero = one.
 Proof. (* FILL IN HERE *) Admitted.
