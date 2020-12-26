@@ -962,9 +962,9 @@ Proof.
     reflexivity.
   - simpl. destruct hd. destruct (split tl). intros l1 l2 H.
     injection H. intros L1 L2. rewrite <- L1. rewrite <- L2.
-    + assert (combine x0 y0 = tl).
-      {apply IHl. reflexivity.}
-      rewrite <- H0. reflexivity.
+    assert (combine x0 y0 = tl).
+    + apply IHl. reflexivity.
+    + rewrite <- H0. reflexivity.
 Qed.
 (** [] *)
 
