@@ -1712,8 +1712,7 @@ Proof.
   apply H. right. intros H'.
   apply H. left. apply H'.
 Qed.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+ (** [] *)
 
 (** **** Exercise: 3 stars, advanced (not_exists_dist) 
 
