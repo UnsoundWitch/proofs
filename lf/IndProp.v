@@ -1720,6 +1720,11 @@ Proof.
        | re | s1 s2 re Hmatch1 IH1 Hmatch2 IH2 ].
   - (* MEmpty *)
     simpl. intros contra. inversion contra.
+  - simpl. intros contra. inversion contra. inversion H0.
+  - simpl. intros H. rewrite app_length in H. apply add_le_cases in H.
+    destruct H.
+    + apply IH1 in H. destruct H, H, H, H, H0. exists x, x0, x1.
+      split. 
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
@@ -1822,7 +1827,11 @@ Qed.
 (** **** Exercise: 2 stars, standard, especially useful (reflect_iff)  *)
 Theorem reflect_iff : forall P b, reflect P b -> (P <-> b = true).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros P b H. induction H.
+  split. intros. reflexivity. intros. apply H.
+  split. intros. destruct H. apply H0.
+  intros. discriminate.
+Qed.
 (** [] *)
 
 (** The advantage of [reflect] over the normal "if and only if"
@@ -1873,8 +1882,15 @@ Fixpoint count n l :=
 Theorem eqbP_practice : forall n l,
   count n l = 0 -> ~(In n l).
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros n l H. induction l.
+  - unfold not. simpl. intros. apply H0.
+  - simpl. unfold not. intros. destruct H0.
+    + simpl in H. destruct (eqbP n x). discriminate.
+      simpl in H. apply IHl in H. rewrite H0 in H1.
+      unfold not in H1. apply H1. reflexivity.
+    + simpl in H. destruct (eqbP n x). discriminate.
+      simpl in H. apply IHl in H. apply H, H0.
+Qed.
 
 (** This small example shows how reflection gives us a small gain in
     convenience; in larger developments, using [reflect] consistently
@@ -1906,7 +1922,9 @@ Proof.
     [nostutter]. *)
 
 Inductive nostutter {X:Type} : list X -> Prop :=
- (* FILL IN HERE *)
+| SEmpty : nostutter []
+| SOne x : nostutter [x]
+| SCon x y z (H1: x <> y) (H2: nostutter (y :: z)): nostutter (x :: y :: z)
 .
 (** Make sure each of these tests succeeds, but feel free to change
     the suggested proof (in comments) if the given one doesn't work
@@ -1916,37 +1934,26 @@ Inductive nostutter {X:Type} : list X -> Prop :=
     tactics we haven't talked about, to make them more robust to
     different possible ways of defining [nostutter].  You can probably
     just uncomment and use them as-is, but you can also prove each
-    example with more basic tactics.)  *)
+    example with more basic tactics.) *)
 
 Example test_nostutter_1: nostutter [3;1;4;1;5;6].
-(* FILL IN HERE *) Admitted.
-(* 
   Proof. repeat constructor; apply eqb_neq; auto.
   Qed.
-*)
 
 Example test_nostutter_2:  nostutter (@nil nat).
-(* FILL IN HERE *) Admitted.
-(* 
   Proof. repeat constructor; apply eqb_neq; auto.
   Qed.
-*)
 
 Example test_nostutter_3:  nostutter [5].
-(* FILL IN HERE *) Admitted.
-(* 
   Proof. repeat constructor; auto. Qed.
-*)
 
 Example test_nostutter_4:      not (nostutter [3;1;1;4]).
-(* FILL IN HERE *) Admitted.
-(* 
-  Proof. intro.
+Proof.
+  intro.
   repeat match goal with
-    h: nostutter _ |- _ => inversion h; clear h; subst
-  end.
+           h: nostutter _ |- _ => inversion h; clear h; subst
+         end.
   contradiction; auto. Qed.
-*)
 
 (* Do not modify the following line: *)
 Definition manual_grade_for_nostutter : option (nat*string) := None.
@@ -2093,15 +2100,23 @@ Lemma in_split : forall (X:Type) (x:X) (l:list X),
   In x l ->
   exists l1 l2, l = l1 ++ x :: l2.
 Proof.
-  (* FILL IN HERE *) Admitted.
-
+  intros X x l H. induction l.
+  - inversion H.
+  - simpl in H. destruct H.
+    + rewrite H. exists [], l. reflexivity.
+    + apply IHl in H as H'. destruct H', H0.
+      exists (x0::x1), x2. rewrite H0. reflexivity.
+Qed.
 (** Now define a property [repeats] such that [repeats X l] asserts
     that [l] contains at least one repeated element (of type [X]).  *)
 
 Inductive repeats {X:Type} : list X -> Prop :=
-  (* FILL IN HERE *)
-.
-
+| REmpty : repeats []
+| RTwo x y (H1: x = y) : repeats [x; y]
+| RHead x y z  (H1: repeats (x :: [y])): repeats (x :: y :: z)
+| RTail x y z (H1: repeats (y :: [z])): repeats (x ++ (y :: [z]))
+| Rmid q x y z (H1: repeats (x :: [y])): repeats (q ++ (x :: [y]) ++ z).
+ 
 (* Do not modify the following line: *)
 Definition manual_grade_for_check_repeats : option (nat*string) := None.
 
@@ -2124,7 +2139,9 @@ Theorem pigeonhole_principle: forall (X:Type) (l1  l2:list X),
    length l2 < length l1 ->
    repeats l1.
 Proof.
-   intros X l1. induction l1 as [|x l1' IHl1'].
+  intros X l1. induction l1 as [|x l1' IHl1'].
+  - intros l2 E H0 H1. apply REmpty.
+  - intros l2 E H0 H1. 
   (* FILL IN HERE *) Admitted.
 
 (** [] *)

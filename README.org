@@ -1,0 +1,27 @@
+* Proofs
+
+  This is a collection of proof exercises I wrote.
+  Currently I have collected examples from Isabelle and Coq.
+  (might extend to Agda/Lean).
+
+** Coq
+
+   All proofs for Coq come from the book *Software Foundation*:
+
+   1. Logical Foundation
+      - [X] Basics
+      - [X] Induction
+      - [X] Lists
+      - [X] Poly
+      - [X] Tactics
+      - [X] Logic
+      - [ ] IndProp (a bit too long...will look back later)
+      - [ ] Maps
+   2. Programming Language Foundations...
+   3. Verified Functional Algorithms
+   4. Quickchick
+   5. Verifiable C
+
+** Isabelle
+
+   Some random assignments.
