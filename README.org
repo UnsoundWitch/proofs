@@ -15,8 +15,10 @@
       - [X] Poly
       - [X] Tactics
       - [X] Logic
-      - [ ] IndProp (a bit too long...will look back later)
-      - [ ] Maps
+      - [ ] IndProp (finished partial...will look back later)
+      - [X] Map
+      - [X] ProofObjects
+      - [ ] IndPrinciples
    2. Programming Language Foundations...
    3. Verified Functional Algorithms
    4. Quickchick

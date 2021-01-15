@@ -534,7 +534,7 @@ Proof.
   - intros H. induction H.
     + apply ev'_0.
     + assert (2 + n = S (S n)).
-      {simpl. reflexivity.} rewrite <- H0.
+      simpl. reflexivity. rewrite <- H0.
       apply ev'_sum. apply ev'_2. apply IHev.
 Qed.
 (** [] *)
