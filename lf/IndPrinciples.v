@@ -72,7 +72,10 @@ Proof.
 Theorem plus_one_r' : forall n:nat,
   n + 1 = S n.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  apply nat_ind.
+  - reflexivity.
+  - intros. simpl. rewrite <- H. reflexivity.
+Qed.
 (** [] *)
 
 (** Coq generates induction principles for every datatype
@@ -119,7 +122,12 @@ Inductive rgb : Type :=
   | red
   | green
   | blue.
-Check rgb_ind.
+Check rgb_ind :
+  forall P : rgb -> Prop,
+    P red ->
+    P green ->
+    P blue ->
+    forall t : rgb, P t.
 (** [] *)
 
 (** Here's another example, this time with one of the constructors
@@ -181,8 +189,13 @@ Inductive booltree : Type :=
  | bt_leaf (b : bool)
  | bt_branch (b : bool) (t1 t2 : booltree).
 
-(* FILL IN HERE:
-   ... *)
+Check booltree_ind:
+  forall P : booltree -> Prop,
+    P bt_empty ->
+    (forall b : bool, P (bt_leaf b)) ->
+    (forall (b : bool) (t1 : booltree),
+        P t1 -> forall (t2 : booltree), P t2 -> P (bt_branch b t1 t2)) ->
+    forall t : booltree, P t.
 
 (* Do not modify the following line: *)
 Definition manual_grade_for_booltree_ind : option (nat*string) := None.
@@ -201,8 +214,9 @@ Definition manual_grade_for_booltree_ind : option (nat*string) := None.
     principle Coq generates is that given above: *)
 
 Inductive Toy : Type :=
-  (* FILL IN HERE *)
-.
+| con1 (b : bool)
+| con2 (n : nat) (t : Toy).
+
 (* Do not modify the following line: *)
 Definition manual_grade_for_toy_ind : option (nat*string) := None.
 (** [] *)
@@ -263,7 +277,14 @@ Check tree_ind.
                forall n : nat, P (constr3 X m n)) ->
             forall m : mytype X, P m
 *) 
-(** [] *)
+
+Inductive mytype (X:Type) : Type :=
+| constr1 (x : X)
+| constr2 (n : nat)
+| constr3 (m : mytype X) (n : nat)
+.
+
+Check mytype_ind.
 
 (** **** Exercise: 1 star, standard, optional (foo) 
 
@@ -289,16 +310,9 @@ Inductive foo' (X:Type) : Type :=
   | C2.
 
 (** What induction principle will Coq generate for [foo']?  Fill
-   in the blanks, then check your answer with Coq.)
+   in the blanks, then check your answer with Coq.)*)
 
-     foo'_ind :
-        forall (X : Type) (P : foo' X -> Prop),
-              (forall (l : list X) (f : foo' X),
-                    _______________________ ->
-                    _______________________   ) ->
-             ___________________________________________ ->
-             forall f : foo' X, ________________________
-*)
+Check foo'_ind.
 
 (** [] *)
 

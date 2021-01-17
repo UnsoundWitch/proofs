@@ -18,7 +18,8 @@
       - [ ] IndProp (finished partial...will look back later)
       - [X] Map
       - [X] ProofObjects
-      - [ ] IndPrinciples
+      - [X] IndPrinciples
+      - [ ] Refl
    2. Programming Language Foundations...
    3. Verified Functional Algorithms
    4. Quickchick
