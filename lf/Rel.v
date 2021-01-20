@@ -103,10 +103,6 @@ Proof.
     Show that the [total_relation] defined in (an exercise in)
     [IndProp] is not a partial function. *)
 
-(* FILL IN HERE
-
-    [] *)
-
 (** **** Exercise: 2 stars, standard, optional (empty_relation_partial) 
 
     Show that the [empty_relation] defined in (an exercise in)
@@ -169,12 +165,16 @@ Proof.
   unfold lt. unfold transitive.
   intros n m o Hnm Hmo.
   induction Hmo as [| m' Hm'o].
-    (* FILL IN HERE *) Admitted.
+  apply le_S, Hnm.
+  apply le_S, IHHm'o.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, optional (lt_trans'') 
 
     Prove the same thing again by induction on [o]. *)
+
+Search (?n <=  ?m).
 
 Theorem lt_trans'' :
   transitive lt.
@@ -182,7 +182,10 @@ Proof.
   unfold lt. unfold transitive.
   intros n m o Hnm Hmo.
   induction o as [| o'].
-  (* FILL IN HERE *) Admitted.
+  - apply Le.le_n_0_eq in Hmo. discriminate Hmo.
+  - apply le_S. inversion Hmo. rewrite <- H0.
+    apply Hnm. apply IHo'. apply H0.
+Qed.
 (** [] *)
 
 (** The transitivity of [le], in turn, can be used to prove some facts
@@ -200,7 +203,9 @@ Qed.
 Theorem le_S_n : forall n m,
   (S n <= S m) -> (n <= m).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. inversion H.
+  apply le_n. apply Sn_bigger in H1. apply H1.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, optional (le_Sn_n_inf) 
@@ -221,7 +226,11 @@ Proof.
 Theorem le_Sn_n : forall n,
   ~ (S n <= n).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold not. intros.
+  induction n. inversion H.
+  apply IHn. apply le_S_n in H.
+  apply H.
+Qed.
 (** [] *)
 
 (** Reflexivity and transitivity are the main concepts we'll need for
@@ -236,11 +245,18 @@ Proof.
 Definition symmetric {X: Type} (R: relation X) :=
   forall a b : X, (R a b) -> (R b a).
 
+Search ( 0 <= ?n ).
+
 (** **** Exercise: 2 stars, standard, optional (le_not_symmetric)  *)
 Theorem le_not_symmetric :
   ~ (symmetric le).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold not, symmetric. intros.
+  assert (1 <= 0). {
+    apply H, le_0_n.
+  }.
+  inversion H0.
+Qed.
 (** [] *)
 
 (** A relation [R] is _antisymmetric_ if [R a b] and [R b a] together
@@ -250,11 +266,21 @@ Proof.
 Definition antisymmetric {X: Type} (R: relation X) :=
   forall a b : X, (R a b) -> (R b a) -> a = b.
 
+Search (S ?n <= ?a).
+
 (** **** Exercise: 2 stars, standard, optional (le_antisymmetric)  *)
 Theorem le_antisymmetric :
   antisymmetric le.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold antisymmetric. intros.
+  induction b.
+  - apply Le.le_n_0_eq in H. rewrite H. reflexivity.
+  - inversion H. reflexivity.
+    apply IHb in H2. rewrite H2 in H0.
+    apply le_Sn_n in H0. inversion H0.
+    apply IHb in H2. rewrite H2. apply le_n.
+    apply le_Sn_le in H0. apply H0.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, optional (le_step)  *)
@@ -263,7 +289,12 @@ Theorem le_step : forall n m p,
   m <= S p ->
   n <= p.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold lt. intros.
+  apply le_S_n.
+  apply (le_trans (S n) m (S p)).
+  apply H.
+  apply H0.
+Qed.
 (** [] *)
 
 (* ----------------------------------------------------------------- *)
@@ -370,16 +401,23 @@ Lemma rsc_R : forall (X:Type) (R:relation X) (x y : X),
        R x y -> clos_refl_trans_1n R x y.
 Proof.
   intros X R x y H.
-  apply rt1n_trans with y. apply H. apply rt1n_refl.   Qed.
+  apply rt1n_trans with y. apply H. apply rt1n_refl. Qed.
 
 (** **** Exercise: 2 stars, standard, optional (rsc_trans)  *)
 Lemma rsc_trans :
   forall (X:Type) (R: relation X) (x y z : X),
-      clos_refl_trans_1n R x y  ->
+      clos_refl_trans_1n R x y ->
       clos_refl_trans_1n R y z ->
       clos_refl_trans_1n R x z.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  induction H.
+  - apply H0.
+  - apply rt1n_trans with y.
+    apply Hxy.
+    apply IHclos_refl_trans_1n.
+    apply H0.
+Qed.
 (** [] *)
 
 (** Then we use these facts to prove that the two definitions of
@@ -391,7 +429,14 @@ Theorem rtc_rsc_coincide :
          forall (X:Type) (R: relation X) (x y : X),
   clos_refl_trans R x y <-> clos_refl_trans_1n R x y.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. split.
+  - intros. induction H. apply rt1n_trans with y. apply H.
+    apply rt1n_refl. apply rt1n_refl. apply rsc_trans with y.
+    apply IHclos_refl_trans1. apply IHclos_refl_trans2.
+  - intros. induction H. apply rt_refl.
+    apply rt_trans with y. apply rt_step. apply Hxy.
+    apply IHclos_refl_trans_1n.
+Qed.
 (** [] *)
 
 (* 2020-09-09 20:51 *)
