@@ -19,7 +19,13 @@
       - [X] Map
       - [X] ProofObjects
       - [X] IndPrinciples
-      - [ ] Refl
+      - [X] Rel
+      - [ ] Imp
+      - [X] ImpParser
+      - [ ] ImpCEvalFun
+      - [ ] Extraction
+      - [ ] Auto
+      - [ ] AltAuto
    2. Programming Language Foundations...
    3. Verified Functional Algorithms
    4. Quickchick

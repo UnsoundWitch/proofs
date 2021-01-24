@@ -410,7 +410,7 @@ Lemma rsc_trans :
       clos_refl_trans_1n R y z ->
       clos_refl_trans_1n R x z.
 Proof.
-  intros.
+  intros. 
   induction H.
   - apply H0.
   - apply rt1n_trans with y.
