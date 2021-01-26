@@ -24,12 +24,10 @@ let rec mul = ( * )
 (** val sub : int -> int -> int **)
 
 let rec sub n m =
-  (fun zero succ n ->
-      if n=0 then zero () else succ (n-1))
+  (fun zero succ n ->       if n=0 then zero () else succ (n-1))
     (fun _ -> n)
     (fun k ->
-    (fun zero succ n ->
-      if n=0 then zero () else succ (n-1))
+    (fun zero succ n ->       if n=0 then zero () else succ (n-1))
       (fun _ -> n)
       (fun l -> sub k l)
       m)
@@ -42,12 +40,10 @@ let rec eqb = ( = )
 (** val leb : int -> int -> bool **)
 
 let rec leb n m =
-  (fun zero succ n ->
-      if n=0 then zero () else succ (n-1))
+  (fun zero succ n ->       if n=0 then zero () else succ (n-1))
     (fun _ -> true)
     (fun n' ->
-    (fun zero succ n ->
-      if n=0 then zero () else succ (n-1))
+    (fun zero succ n ->       if n=0 then zero () else succ (n-1))
       (fun _ -> false)
       (fun m' -> leb n' m')
       m)
@@ -167,8 +163,7 @@ type com =
 (** val ceval_step : state -> com -> int -> state option **)
 
 let rec ceval_step st c i =
-  (fun zero succ n ->
-      if n=0 then zero () else succ (n-1))
+  (fun zero succ n ->       if n=0 then zero () else succ (n-1))
     (fun _ -> None)
     (fun i' ->
     match c with
@@ -178,8 +173,7 @@ let rec ceval_step st c i =
       (match ceval_step st c1 i' with
        | Some st' -> ceval_step st' c2 i'
        | None -> None)
-    | CIf (b, c1, c2) ->
-      if beval st b then ceval_step st c1 i' else ceval_step st c2 i'
+    | CIf (b, c1, c2) -> if beval st b then ceval_step st c1 i' else ceval_step st c2 i'
     | CWhile (b1, c1) ->
       if beval st b1
       then (match ceval_step st c1 i' with

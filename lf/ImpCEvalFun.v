@@ -202,16 +202,19 @@ Definition test_ceval (st:state) (c:com) :=
    [X] (inclusive: [1 + 2 + ... + X]) in the variable [Y].  Make sure
    your solution satisfies the test that follows. *)
 
-Definition pup_to_n : com
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
-
-(* 
+Definition pup_to_n : com :=
+  <{
+    Y := 0;
+    while ~(X = 0) do
+            Y := Y + X;
+            X := X - 1
+            end
+  }>.
 
 Example pup_to_n_1 :
   test_ceval (X !-> 5) pup_to_n
   = Some (0, 15, 0).
 Proof. reflexivity. Qed.
-*)
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, optional (peven) 
@@ -349,13 +352,33 @@ induction i1 as [|i1']; intros i2 st st' c Hle Hceval.
     Finish the following proof.  You'll need [ceval_step_more] in a
     few places, as well as some basic facts about [<=] and [plus]. *)
 
+Search (?b + ?a = ?a + ?b).
+
 Theorem ceval__ceval_step: forall c st st',
       st =[ c ]=> st' ->
       exists i, ceval_step st c i = Some st'.
 Proof.
   intros c st st' Hce.
   induction Hce.
-  (* FILL IN HERE *) Admitted.
+  - exists 1. reflexivity.
+  - exists 1. simpl. rewrite H. reflexivity.
+  - destruct IHHce1, IHHce2.
+    exists (S (x + x0)). simpl.
+    eapply ceval_step_more in H. rewrite H.
+    eapply ceval_step_more in H0. rewrite H0.
+    reflexivity. 
+    lia. lia.
+  - destruct IHHce. exists (S x). simpl.
+    rewrite H. apply H0.
+  - destruct IHHce. exists (S x). simpl.
+    rewrite H. apply H0.
+  - exists 1. simpl. rewrite H. reflexivity.
+  - destruct IHHce1, IHHce2. exists (S (x + x0)).
+    simpl. eapply ceval_step_more in H0.
+    eapply ceval_step_more in H1.
+    rewrite H0, H, H1. reflexivity.
+    lia. lia.
+Qed.
 (** [] *)
 
 Theorem ceval_and_ceval_step_coincide: forall c st st',

@@ -146,8 +146,7 @@ type 'x optionE =
 type 't parser0 = token list -> ('t * token list) optionE
 
 val many_helper :
-  'a1 parser0 -> 'a1 list -> int -> token list -> ('a1 list * token list)
-  optionE
+  'a1 parser0 -> 'a1 list -> int -> token list -> ('a1 list * token list) optionE
 
 val many : 'a1 parser0 -> int -> 'a1 list parser0
 

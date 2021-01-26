@@ -54,8 +54,8 @@ Proof.
   - (* MUnionL *) simpl. apply MUnionL. apply IH.
   - (* MUnionR *) simpl. apply MUnionR. apply IH.
   - (* MStar0 *) simpl. apply MStar0.
-  - (* MStarApp *) simpl. apply MStarApp. apply IH1.  apply IH2.
-Qed.
+  - (* MStarApp *) simpl. apply MStarApp. apply IH1. apply IH2.
+Qed. 
 
 (* ################################################################# *)
 (** * Coq Automation *)

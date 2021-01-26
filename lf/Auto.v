@@ -119,7 +119,7 @@ Proof.
   (* When it cannot solve the goal, [auto] does nothing *)
   auto.
   (* Optional argument says how deep to search (default is 5) *)
-  auto 6.
+  info_auto 6.
 Qed.
 
 (** When searching for potential proofs of the current goal,
@@ -153,7 +153,7 @@ Example auto_example_6 : forall n m p : nat,
   n <= p ->
   n = m.
 Proof.
-  auto using le_antisym.
+  info_auto using le_antisym.
 Qed.
 
 (** Of course, in any given development there will probably be

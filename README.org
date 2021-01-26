@@ -15,18 +15,19 @@
       - [X] Poly
       - [X] Tactics
       - [X] Logic
-      - [ ] IndProp (finished partial...will look back later)
+      - [ ] IndProp (almost)
       - [X] Map
       - [X] ProofObjects
       - [X] IndPrinciples
       - [X] Rel
-      - [ ] Imp
+      - [ ] Imp (almost)
       - [X] ImpParser
-      - [ ] ImpCEvalFun
-      - [ ] Extraction
-      - [ ] Auto
-      - [ ] AltAuto
-   2. Programming Language Foundations...
+      - [X] ImpCEvalFun
+      - [X] Extraction
+      - [X] Auto
+      - [X] AltAuto
+   2. Programming Language Foundations
+      - [ ] Equiv
    3. Verified Functional Algorithms
    4. Quickchick
    5. Verifiable C

@@ -174,10 +174,9 @@ let rec beval st = function
 | BEq (a1, a2) -> eqb (aeval st a1) (aeval st a2)
 | BLe (a1, a2) -> leb (aeval st a1) (aeval st a2)
 | BNot b1 -> negb (beval st b1)
-| BAnd (b1, b2) ->
-  (match beval st b1 with
-   | True -> beval st b2
-   | False -> False)
+| BAnd (b1, b2) -> (match beval st b1 with
+                    | True -> beval st b2
+                    | False -> False)
 
 type com =
 | CSkip
