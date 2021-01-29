@@ -28,6 +28,11 @@
       - [X] AltAuto
    2. Programming Language Foundations
       - [ ] Equiv
+      - [ ] Hoare
+      - [ ] Hoare2
+      - [ ] HoareAsLogic
+      - [ ] Smallstep
+      - [ ] Types
    3. Verified Functional Algorithms
    4. Quickchick
    5. Verifiable C
