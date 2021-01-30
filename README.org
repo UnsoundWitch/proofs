@@ -15,19 +15,19 @@
       - [X] Poly
       - [X] Tactics
       - [X] Logic
-      - [ ] IndProp (almost)
+      - [ ] IndProp (partial)
       - [X] Map
       - [X] ProofObjects
       - [X] IndPrinciples
       - [X] Rel
-      - [ ] Imp (almost)
+      - [ ] Imp (partial)
       - [X] ImpParser
       - [X] ImpCEvalFun
       - [X] Extraction
       - [X] Auto
       - [X] AltAuto
    2. Programming Language Foundations
-      - [ ] Equiv
+      - [ ] Equiv (partial)
       - [ ] Hoare
       - [ ] Hoare2
       - [ ] HoareAsLogic

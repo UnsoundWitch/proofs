@@ -1601,22 +1601,29 @@ Definition pYX :=
 (** If you think they are equivalent, prove it. If you think they are
     not, prove that. *)
 
+Search (?a !-> ?b; ?c !-> ?d; ?s).
+
 Theorem pXY_cequiv_pYX :
   cequiv pXY pYX \/ ~cequiv pXY pYX.
 Proof.
-  right. unfold pXY. unfold pYX.
-  unfold not. unfold cequiv. intros.
-  remember empty_st as st.
-  assert (st =[ havoc X; havoc Y ]=> (Y !-> 1 ; X !-> 1; st)).
-  repeat econstructor.
-  assert (st =[ havoc Y; havoc X ]=> (X !-> 1 ; Y !-> 1; st)).
-  repeat econstructor.
-  rewrite H in H0.
-  inversion H0. inversion H1. subst. inversion H4. inversion H10. subst.
-  inversion H7. inversion H13. subst.
- Admitted.
-  
-(** [] *)
+  left. unfold pXY. unfold pYX.
+  unfold cequiv. intros.
+  split; intros.
+  - destruct (eqb_string X Y) eqn:Eb.
+    + rewrite eqb_string_true_iff in Eb.
+      rewrite Eb in *. apply H.
+    + rewrite eqb_string_false_iff in Eb.
+      inversion H. inversion H2. inversion H5. subst.
+      apply E_Seq with (Y !-> n0; st). constructor.
+      rewrite t_update_permute. constructor. auto.
+  - destruct (eqb_string X Y) eqn:Eb.
+    + rewrite eqb_string_true_iff in Eb.
+      rewrite Eb in *. apply H.
+    + rewrite eqb_string_false_iff in Eb.
+      inversion H. inversion H2. inversion H5. subst.
+      apply E_Seq with (X !-> n0; st). constructor.
+      rewrite t_update_permute. constructor. auto.
+Qed.
 
 (** **** Exercise: 4 stars, standard, optional (havoc_copy) 
 
@@ -1641,7 +1648,13 @@ Proof.
   assert (st =[ havoc X; havoc Y ]=> (Y !-> 2 ; X !-> 1; st)).
   repeat econstructor.
   rewrite H in H0.
-  inversion H0. subst. inversion H3. subst. inversion H6.
+  assert (st =[ havoc X; Y := X ]=> (Y !-> 1 ; X !-> 1; st)).
+  repeat econstructor.
+  inversion H0. inversion H4. subst. inversion H7. subst.
+  inversion H1. inversion H5. subst. inversion H10. subst.
+  inversion H8. inversion H11.
+  
+  
 (* FILL IN HERE *) Admitted.
 (** [] *)
 
@@ -1671,6 +1684,8 @@ Definition p2 : com :=
        skip
      end }>.
 
+Search (?a + 1 = ?c).
+
 (** Intuitively, [p1] and [p2] have the same termination behavior:
     either they loop forever, or they terminate in the same state they
     started in.  We can capture the termination behavior of [p1] and
@@ -1678,12 +1693,39 @@ Definition p2 : com :=
 
 Lemma p1_may_diverge : forall st st', st X <> 0 ->
   ~ st =[ p1 ]=> st'.
-Proof. (* FILL IN HERE *) Admitted.
-
+Proof.
+  intros. unfold p1.
+  assert (beval st <{ ~ X = 0 }> = beval st <{ true }>). {
+    simpl. rewrite negb_true_iff. rewrite eqb_neq. auto.
+  }
+  unfold not. intros.
+  remember <{while ~ X = 0 do havoc Y; X := X + 1 end }>.
+  induction H1; inversion Heqc; subst.
+  simpl in H0. simpl in H1. rewrite H0 in H1. discriminate H1.
+  apply IHceval2; auto. inversion H1_. subst. inversion H4.
+  inversion H7. subst. rewrite t_update_eq. simpl.
+  rewrite add_1_r. auto.
+  inversion H1_. subst. inversion H4. inversion H7. subst.
+  simpl. rewrite negb_true_iff. rewrite eqb_neq.
+  rewrite t_update_eq. rewrite add_1_r. auto.
+Qed.
+    
 Lemma p2_may_diverge : forall st st', st X <> 0 ->
   ~ st =[ p2 ]=> st'.
 Proof.
-(* FILL IN HERE *) Admitted.
+  intros. unfold p2.
+  assert (beval st <{ ~ X = 0 }> = beval st <{ true }>). {
+    simpl. rewrite negb_true_iff. rewrite eqb_neq. auto.
+  }
+  unfold not. intros.
+  remember <{while ~ X = 0 do skip end }>.
+  induction H1; inversion Heqc; subst.
+  rewrite H0 in H1. discriminate H1.
+  apply IHceval2; auto. inversion H1_.
+  inversion H1_0; subst; auto.
+  simpl. rewrite negb_true_iff. rewrite eqb_neq.
+  inversion H1_. subst. auto.
+Qed.
 (** [] *)
 
 (** **** Exercise: 4 stars, advanced (p1_p2_equiv) 
@@ -1692,7 +1734,18 @@ Proof.
     equivalent. *)
 
 Theorem p1_p2_equiv : cequiv p1 p2.
-Proof. (* FILL IN HERE *) Admitted.
+Proof.
+  unfold p1, p2.
+  unfold cequiv. split; intros.
+  - remember <{while ~ X = 0 do havoc Y; X := X + 1 end}>.
+    remember <{while ~ X = 0 do skip end}>.
+    remember <{~ X = 0}>.
+    induction H; try discriminate Heqc; subst.
+    + apply E_WhileFalse. simpl. inversion Heqc. rewrite H1 in H. auto.
+    + inversion Heqc. subst. apply E_WhileTrue with st'. auto.
+      inversion H0. subst. inversion H4. inversion H7. subst.
+      inversion H7. subst.
+Admitted.
 (** [] *)
 
 (** **** Exercise: 4 stars, advanced (p3_p4_inequiv) 

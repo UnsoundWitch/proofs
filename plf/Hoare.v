@@ -318,7 +318,7 @@ End ExPrettyAssertions.
 *)
 (* FILL IN HERE
 
-    [] *)
+    [1, 2, 3, 4, 6, 8] *)
 
 (* ################################################################# *)
 (** * Hoare Triples, Formally *)
@@ -346,8 +346,9 @@ Theorem hoare_post_true : forall (P Q : Assertion) c,
   (forall st, Q st) ->
   {{P}} c {{Q}}.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  unfold hoare_triple. intros.
+  apply H.
+Qed.
 
 (** **** Exercise: 1 star, standard (hoare_pre_false)  *)
 
@@ -358,7 +359,11 @@ Theorem hoare_pre_false : forall (P Q : Assertion) c,
   (forall st, ~ (P st)) ->
   {{P}} c {{Q}}.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold hoare_triple.
+  intros. specialize H with st.
+  unfold not in H. apply H in H1.
+  inversion H1.
+Qed.
 (** [] *)
 
 (* ################################################################# *)
@@ -562,7 +567,7 @@ Example assn_sub_example :
   {{X < 5}}.
 Proof.
   (* WORKED IN CLASS *)
-  apply hoare_asgn.  Qed.
+  apply hoare_asgn. Qed.
 
 (** (Of course, what would be even more helpful is to prove this
     simpler triple:
@@ -575,11 +580,11 @@ Proof.
 
     Complete these Hoare triples...
 
-    1) {{ ??? }}
+    1) {{ X <= 5 }}
        X ::= 2 * X
        {{ X <= 10 }}
 
-    2) {{ ??? }}
+    2) {{ 0 <= X /\ X <= 5 }}
        X := 3
        {{ 0 <= X /\ X <= 5 }}
 
@@ -609,7 +614,7 @@ Definition manual_grade_for_hoare_asgn_examples : option (nat*string) := None.
     [a], and your counterexample needs to exhibit an [a] for which
     the rule doesn't work.) *)
 
-(* FILL IN HERE *)
+(* X = 10 / 0 *)
 
 (* Do not modify the following line: *)
 Definition manual_grade_for_hoare_asgn_wrong : option (nat*string) := None.
@@ -640,7 +645,15 @@ Theorem hoare_asgn_fwd :
   {{fun st => P (X !-> m ; st)
            /\ st X = aeval (X !-> m ; st) a }}.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. unfold hoare_triple. intros.
+  split; destruct H0.
+  - inversion H. subst.
+    rewrite t_update_shadow. rewrite t_update_same.
+    assumption.
+  - inversion H. subst. rewrite t_update_eq.
+    rewrite t_update_shadow. rewrite t_update_same.
+    reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, advanced, optional (hoare_asgn_fwd_exists) 
@@ -663,7 +676,15 @@ Theorem hoare_asgn_fwd_exists :
   {{fun st => exists m, P (X !-> m ; st) /\
                 st X = aeval (X !-> m ; st) a }}.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold hoare_triple. intros.
+  inversion H. subst.
+  exists (st X).
+  split.
+  - rewrite t_update_shadow. rewrite t_update_same.
+    assumption.
+  - rewrite t_update_shadow. rewrite t_update_same.
+    reflexivity.
+Qed.
 (** [] *)
 
 (* ================================================================= *)
@@ -989,19 +1010,26 @@ Qed.
     Prove these triples.  Try to make your proof scripts as nicely automated
     as those above. *)
 
+Ltac assn_auto' :=
+  try eapply hoare_consequence_pre;
+  try apply hoare_asgn;
+  try assn_auto.
+
 Example assn_sub_ex1' :
   {{ X <= 5 }}
   X := 2 * X
   {{ X <= 10 }}.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  assn_auto'.
+Qed.
 
 Example assn_sub_ex2' :
   {{ 0 <= 3 /\ 3 <= 5 }}
   X := 3
   {{ 0 <= X /\ X <= 5 }}.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  assn_auto'.
+Qed.
 
 (** [] *)
 
@@ -1106,9 +1134,10 @@ Example hoare_asgn_example4 :
   X := 1; Y := 2
   {{ X = 1 /\ Y = 2 }}.
 Proof.
-  apply hoare_seq with (Q := (X = 1)%assertion).
+  apply hoare_seq with (Q := (X = 1)%assertion);
+    assn_auto'.
+Qed.
   (* The annotation [%assertion] is needed here to help Coq parse correctly. *)
-  (* FILL IN HERE *) Admitted.
 (** [] *)
 
 (** **** Exercise: 3 stars, standard (swap_exercise) 
@@ -1124,15 +1153,21 @@ Proof.
     your proof will want to start at the end and work back to the
     beginning of your program.)  *)
 
-Definition swap_program : com
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Definition swap_program : com :=
+  <{
+    Z := X; X := Y; Y := Z
+  }>.
 
 Theorem swap_exercise :
   {{X <= Y}}
   swap_program
   {{Y <= X}}.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  apply hoare_seq with (Q := (Z <= Y /\ X <= Y)%assertion).
+  apply hoare_seq with (Q := (Z <= Y /\ X = Y)%assertion).
+  assn_auto'. assn_auto'. assn_auto'.
+Qed.
+ 
 (** [] *)
 
 (** **** Exercise: 4 stars, standard (invalid_triple) 
