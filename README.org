@@ -28,7 +28,7 @@
       - [X] AltAuto
    2. Programming Language Foundations
       - [ ] Equiv (partial)
-      - [ ] Hoare
+      - [X] Hoare
       - [ ] Hoare2
       - [ ] HoareAsLogic
       - [ ] Smallstep
