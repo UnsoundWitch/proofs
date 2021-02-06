@@ -109,7 +109,12 @@ From PLF Require Import Hoare.
       to [P /\ b] and [Q]) and its "else" branch is locally consistent
       with respect to [P /\ ~b] and [Q]:
 
-          {{ P }}
+          {{ P }}parity_ge_2. apply ble_nat_true. apply H0.
+  unfold assert_implies, assn_sub, update.
+  intros. auto.
+  unfold assert_implies, assn_sub, update.
+  intros. destruct H. rewrite <- H. symmetry. apply parity_lt_2. apply ble_nat_false. apply H0.
+Qed.
           if b then
             {{ P /\ b }}
             c1
@@ -263,15 +268,15 @@ These decorations were constructed as follows:
 
        {{ True }}
       if X <= Y then
-          {{                         }} ->>
-          {{                         }}
+          {{     X <= Y              }} ->>
+          {{ (Y - X) + X = Y         }}
         Z := Y - X
-          {{                         }}
+          {{     Z = Y - X           }}
       else
-          {{                         }} ->>
-          {{                         }}
+          {{     X > Y               }} ->>
+          {{  X + Z = X + Z         }}
         Y := X + Z
-          {{                         }}
+          {{     Y = X + Z           }}
       end
         {{ Y = X + Z }}
 
@@ -800,7 +805,24 @@ Theorem parity_correct : forall (m:nat),
   end
   {{  X = parity m }}.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  eapply hoare_consequence_post.
+  apply hoare_consequence_pre with (fun st => parity (st X) = parity m).
+  apply hoare_while.
+  eapply hoare_consequence_pre.
+  apply hoare_asgn.
+  unfold "->>", assn_sub. intros. rewrite t_update_eq.
+  destruct H. simpl in *. rewrite <- H.
+  apply parity_ge_2. destruct (st X).
+  congruence. destruct n. congruence. lia.
+  unfold "->>", assn_sub. intros. auto.
+  unfold "->>", assn_sub. intros. simpl in *.
+  destruct H. rewrite <- H.
+  symmetry. apply parity_lt_2.
+  destruct (st X). unfold not. intros. inversion H1.
+  destruct n. unfold not. intros. inversion H1. inversion H3.
+  congruence.
+Qed.
 (** [] *)
 
 (* ================================================================= *)
@@ -1199,8 +1221,17 @@ Definition is_wp P c Q :=
 Theorem is_wp_example :
   is_wp (Y <= 4) <{X := Y + 1}> (X <= 5).
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  unfold is_wp. split.
+  - eapply hoare_consequence_pre.
+    apply hoare_asgn. unfold "->>", assn_sub.
+    intros. simpl in *. rewrite t_update_eq.
+    lia.
+  - unfold hoare_triple, "->>". intros.
+    specialize (H st (X !-> aeval st <{Y + 1}>; st)).
+    simpl in *. apply H in H0.
+    + rewrite t_update_eq in H0. lia.
+    + apply E_Ass. reflexivity.
+Qed.
 
 (** **** Exercise: 2 stars, advanced, optional (hoare_asgn_weakest) 
 
@@ -1210,7 +1241,15 @@ Proof.
 Theorem hoare_asgn_weakest : forall Q X a,
   is_wp (Q [X |-> a]) <{ X := a }> Q.
 Proof.
-(* FILL IN HERE *) Admitted.
+  unfold is_wp. split.
+  - eapply hoare_consequence_post.
+    apply hoare_asgn. auto.
+  - unfold hoare_triple, "->>". intros.
+    specialize (H st (X !-> aeval st a; st)).
+    apply H in H0.
+    + unfold assn_sub. assumption.
+    + apply E_Ass. reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, advanced, optional (hoare_havoc_weakest) 
@@ -1224,7 +1263,12 @@ Lemma hoare_havoc_weakest : forall (P Q : Assertion) (X : string),
   {{ P }} havoc X {{ Q }} ->
   P ->> havoc_pre X Q.
 Proof.
-(* FILL IN HERE *) Admitted.
+  unfold hoare_triple, "->>". 
+  intros. eapply H in H0.
+(*
+got a bug here...the havoc_pre should be unfolded
+but not working for my Coq.
+*) Admitted.
 End Himp2.
 (** [] *)
 
@@ -2025,15 +2069,29 @@ becomes
     {{ X = m /\ Y = 0 }} ;;
 *)
 
-Example slow_assignment_dec (m : nat) : decorated
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Example slow_assignment_dec (m : nat) : decorated :=
+  <{
+    {{ 0 = 0 /\ X = m}}
+      Y := 0
+    {{ Y = 0 /\ X = m}};
+    while ~(X = 0) do
+      {{X > 0 /\ m = X + Y}}
+        X := X - 1
+      {{X >= 0 /\ m = X + Y + 1}};
+        Y := Y + 1
+      {{X >= 0 /\ m = X + Y}}    
+      end
+    {{ Y = m /\ X = 0 }}
+  }>.
 
 (** Now prove the correctness of your decorated program.  If all goes well,
     you will need only [verify]. *)
 
 Theorem slow_assignment_dec_correct : forall m,
   dec_correct (slow_assignment_dec m).
-Proof. (* FILL IN HERE *) Admitted.
+Proof.
+  intros. verify.
+Qed.
 
 (* Do not modify the following line: *)
 Definition manual_grade_for_check_defn_of_slow_assignment_dec : option (nat*string) := None.
@@ -2106,7 +2164,13 @@ Lemma fib_eqn : forall n,
   n > 0 ->
   fib n + fib (pred n) = fib (1 + n).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  induction n.
+  inversion H.
+  simpl. destruct n.
+  reflexivity.
+  reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 4 stars, advanced, optional (fib) 
@@ -2135,12 +2199,40 @@ Proof.
 
 Definition T : string := "T".
 
-Definition dfib (n : nat) : decorated
-(* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Definition dfib (n : nat) : decorated :=
+  <{
+    {{1 = 1}}
+      X := 1
+    {{X = 1}};
+      Y := 1
+    {{X = 1 /\ Y = 1}};
+      Z := 1
+    {{X = 1 /\ Y = 1 /\ Z = 1 /\ ap fib (X - 1) = Y /\ X <= 1 + n /\ ap fib X = Z /\ X >= 1}};
+    while ~(X = 1 + n) do
+      {{~(X = 1 + n) /\ ap fib (X - 1) = Y /\ ap fib X = Z /\ X <= 1 + n /\ X >= 1}}
+      T := Z
+      {{T = Z /\ ~(X = 1 + n) /\ ap fib (X - 1) = Y /\ ap fib X = T /\ X >= 1 /\ X <= 1 + n}};
+      Z := Z + Y
+      {{Z = T + Y /\ ~(X = 1 + n) /\ ap fib (X - 1) = Y /\ ap fib (X + 1) = Z /\ ap fib X = T /\ X >= 1 /\ X <= 1 + n}};
+      Y := T
+      {{Y = T /\ ~(X = 1 + n) /\ ap fib X = Y /\ ap fib (X + 1) = Z /\ ap fib X = T /\ X >= 1 /\ X <= 1 + n}};
+      X := 1 + X
+      {{ap fib X = Z /\ ap fib (X - 1) = Y /\ ~(X = 2 + n) /\ X >= 1 /\  X <= 2 + n}}
+    end
+  {{X = 1 + n /\ Y = fib n /\ ap fib (X - 1) = Y}}
+}>.
+
+Search (?n - 1).
 
 Theorem dfib_correct : forall n,
-  dec_correct (dfib n).
-(* FILL IN HERE *) Admitted.
+    dec_correct (dfib n).
+  intros. verify.
+  - simpl. rewrite sub_0_r. reflexivity.
+  - induction H3. simpl. reflexivity. rewrite plus_comm.
+    simpl. induction m. reflexivity. rewrite sub_0_r. reflexivity.
+  - destruct (st X). reflexivity. symmetry. rewrite plus_comm. reflexivity.
+  - rewrite sub_0_r. reflexivity.
+Qed. 
 (** [] *)
 
 (** **** Exercise: 5 stars, advanced, optional (improve_dcom) 

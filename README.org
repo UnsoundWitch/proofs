@@ -29,7 +29,7 @@
    2. Programming Language Foundations
       - [ ] Equiv (partial)
       - [X] Hoare
-      - [ ] Hoare2
+      - [X] Hoare2
       - [ ] HoareAsLogic
       - [ ] Smallstep
       - [ ] Types
