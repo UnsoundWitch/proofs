@@ -238,7 +238,14 @@ Qed.
 Theorem provable_true_post : forall c P,
     derivable P c True.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros c. induction c; intros.
+  - eapply H_Consequence_post. econstructor. auto.
+  - eapply H_Consequence_pre. econstructor. eauto.
+  - econstructor. apply IHc1. apply IHc2.
+  - econstructor. apply IHc1. apply IHc2.
+  - econstructor. econstructor.
+    apply IHc. auto. auto.
+Qed.
 
 (** [] *)
 
@@ -250,7 +257,23 @@ Proof.
 Theorem provable_false_pre : forall c Q,
     derivable False c Q.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros c. induction c; intros.
+  - eapply H_Consequence_post. econstructor.
+    intros. simpl in *. inversion H.
+  - eapply H_Consequence_pre. econstructor. intros.
+    inversion H.
+  - econstructor. eapply IHc1. eapply IHc2.
+  - econstructor; simpl.
+    + eapply H_Consequence_pre. apply IHc1.
+      intros. destruct H. inversion H.
+    + eapply H_Consequence_pre. apply IHc2.
+      intros. destruct H. inversion H.
+  - econstructor. econstructor.
+    eapply H_Consequence_pre. apply IHc.
+    + intros. destruct H. apply H.
+    + auto. 
+    + intros. simpl in *. destruct H. inversion H.
+Qed.
 
 (** [] *)
 
@@ -288,7 +311,25 @@ Proof.
 Theorem hoare_sound : forall P c Q,
   derivable P c Q -> valid P c Q.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. unfold valid. induction X; intros.
+  - inversion H. subst. congruence.
+  - inversion H. subst. apply H0.
+  - inversion H. subst. apply IHX1 in H3.
+    apply IHX2 in H6. auto. auto. auto.
+  - inversion H; subst.
+    + eapply IHX1. apply H7.
+      split. apply H0. simpl. congruence.
+    + eapply IHX2. apply H7.
+      split. apply H0. simpl. congruence.
+  - remember <{while b do c end}>. induction H; inversion Heqc0; subst.
+    + split; congruence.
+    + apply IHceval2. reflexivity.
+      eapply IHX. apply H1.
+      split; congruence.
+  - apply IHX in H.
+    + apply q, H.
+    + apply p, H0.
+Qed.
 (** [] *)
 
 (** The proof of completeness is more challenging.  To carry out the
@@ -333,7 +374,9 @@ Proof. eauto. Qed.
 Lemma wp_seq : forall P Q c1 c2,
     derivable P c1 (wp c2 Q) -> derivable (wp c2 Q) c2 Q -> derivable P <{c1; c2}> Q.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  econstructor. apply X. apply X0.
+Qed.
 
 (** [] *)
 
@@ -346,8 +389,12 @@ Proof.
 Lemma wp_invariant : forall b c Q,
     valid (wp <{while b do c end}> Q /\ b) c (wp <{while b do c end}> Q).
 Proof.
-  (* FILL IN HERE *) Admitted.
-
+  unfold valid, wp. intros.
+  destruct H0. simpl in *.
+  apply H0. eapply E_WhileTrue in H1.
+  apply H1.
+  congruence. congruence.
+Qed.
 (** [] *)
 
 (** **** Exercise: 4 stars, standard (hoare_complete)  *)
@@ -363,13 +410,46 @@ Proof.
       https://www.ps.uni-saarland.de/courses/sem-ws11/script/Hoare.html
 *)
 
+Search (?a <> true).
+
 Theorem hoare_complete: forall P c Q,
   valid P c Q -> derivable P c Q.
 Proof.
-  unfold valid. intros P c. generalize dependent P.
+  intros P c. generalize dependent P.
   induction c; intros P Q HT.
-  (* FILL IN HERE *) Admitted.
-
+  - eapply H_Consequence_post. econstructor.
+    intros. eapply HT. econstructor. apply H.
+  - eapply H_Consequence_pre. econstructor.
+    intros. eapply HT. econstructor.
+    reflexivity. apply H.
+  - unfold valid in *. apply wp_seq.
+    + apply IHc1. intros. unfold wp. intros.
+      eapply HT. econstructor. apply H.
+      apply H1. apply H0.
+    + apply IHc2. intros. unfold wp in H0.
+      apply H0. apply H.
+  - unfold valid in *. econstructor.
+    + apply IHc1. intros. apply HT with st.
+      apply E_IfTrue; destruct H0. apply H1.
+      apply H. destruct H0. apply H0.
+    + apply IHc2. intros. apply HT with st.
+      destruct H0.
+      apply E_IfFalse. simpl in H1.
+      rewrite Bool.not_true_iff_false in H1.
+      apply H1. apply H. destruct H0.
+      apply H0.
+  - eapply H_Consequence_pre. econstructor.
+    + econstructor. apply IHc.
+      apply wp_invariant.
+    + unfold wp. intros. unfold valid in HT.
+      eapply HT. apply H0. apply H.
+    + intros. simpl in *. destruct H.
+      unfold valid, wp in *.
+      eapply H. apply E_WhileFalse.
+      rewrite Bool.not_true_iff_false in H0.
+      apply H0.
+    + intros. apply H.
+Qed.
 (** [] *)
 
 

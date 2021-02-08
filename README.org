@@ -30,9 +30,22 @@
       - [ ] Equiv (partial)
       - [X] Hoare
       - [X] Hoare2
-      - [ ] HoareAsLogic
+      - [X] HoareAsLogic
       - [ ] Smallstep
       - [ ] Types
+      - [ ] STLC
+      - [ ] STLCProp
+      - [ ] MoreSTLC
+      - [ ] Sub
+      - [ ] TypeChecking
+      - [ ] Records
+      - [ ] Reference
+      - [ ] RecordsSub
+      - [ ] Norm
+      - [ ] LibTactics
+      - [ ] UseTactics
+      - [ ] UseAuto
+      - [ ] PE
    3. Verified Functional Algorithms
    4. Quickchick
    5. Verifiable C
