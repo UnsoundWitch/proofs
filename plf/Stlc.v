@@ -434,7 +434,22 @@ Check <{[x:=true] x}>.
 Inductive substi (s : tm) (x : string) : tm -> tm -> Prop :=
   | s_var1 :
       substi s x (tm_var x) s
-  (* FILL IN HERE *)
+  | s_var2 : forall y,
+      y <> x ->
+      substi s x (tm_var y) (tm_var y)
+  | s_abs1 : forall T t1,
+      substi s x <{\x:T, t1}>  <{\x:T, t1}>
+  | s_abs2 : forall y T t1,
+      y <> x->
+      substi s x <{\y:T, t1}>  <{\y:T, [x:=s] t1}>
+  | s_app : forall t1 t2,
+      substi s x  <{t1 t2}>  <{([x:=s] t1) ([x:=s] t2)}>
+  | s_tru :
+      substi s x <{true}> <{true}>
+  | s_fls :
+      substi s x <{false}> <{false}>
+  | s_if : forall t1 t2 t3,
+      substi s x <{if t1 then t2 else t3}>  <{if ([x:=s] t1) then ([x:=s] t2) else ([x:=s] t3)}>
 .
 
 Hint Constructors substi : core.
@@ -442,7 +457,32 @@ Hint Constructors substi : core.
 Theorem substi_correct : forall s x t t',
   <{ [x:=s]t }> = t' <-> substi s x t t'.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. split.
+  - induction t; intros.
+    + inversion H. simpl. destruct (eqb_string x0 s0) eqn:Eb.
+      rewrite eqb_string_true_iff in Eb. rewrite Eb. auto.
+      rewrite eqb_string_false_iff in Eb. auto.
+    + rewrite <- H. simpl. auto.
+    + rewrite <- H. simpl. destruct (eqb_string x0 s0) eqn:Eb.
+      rewrite eqb_string_true_iff in Eb. rewrite Eb. auto.
+      rewrite eqb_string_false_iff in Eb. auto.
+    + inversion H. auto.
+    + inversion H. auto.
+    + rewrite <- H. simpl. auto.
+  - intros. induction H.
+    + simpl. rewrite <- eqb_string_refl. auto.
+    + simpl. assert (x0 <> y0).
+      { unfold not. intros. unfold not in H. apply H. rewrite H0. auto. }
+      rewrite <- eqb_string_false_iff in H0. rewrite H0. auto.
+    + simpl. rewrite <- eqb_string_refl. auto.
+    + simpl. assert (x0 <> y0).
+      { unfold not. intros. unfold not in H. apply H. rewrite H0. auto. }
+      rewrite <- eqb_string_false_iff in H0. rewrite H0. auto.
+    + auto.
+    + auto.
+    + auto.
+    + auto.
+Qed.
 (** [] *)
 
 (* ================================================================= *)
@@ -635,13 +675,19 @@ Lemma step_example5 :
        <{idBBBB idBB idB}>
   -->* idB.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  normalize.
+Qed.
 
 Lemma step_example5_with_normalize :
        <{idBBBB idBB idB}>
   -->* idB.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  eapply multi_step. apply ST_App1.
+  apply ST_AppAbs. auto. simpl.
+  eapply multi_step. apply ST_AppAbs.
+  auto. simpl.
+  apply multi_refl.
+Qed.
 (** [] *)
 
 (* ################################################################# *)
@@ -775,7 +821,12 @@ Example typing_example_2_full :
           (y (y x)) \in
     (Bool -> (Bool -> Bool) -> Bool).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  apply T_Abs.
+  apply T_Abs.
+  eapply T_App. apply T_Var. apply update_eq.
+  eapply T_App. apply T_Var. apply update_eq.
+  apply T_Var. apply update_neq. intros contra. discriminate.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard (typing_example_3) 
@@ -797,8 +848,18 @@ Example typing_example_3 :
                (y (x z)) \in
       T.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  eexists.
+  apply T_Abs.
+  apply T_Abs.
+  apply T_Abs.
+  eapply T_App. apply T_Var. rewrite update_neq. rewrite update_eq. reflexivity.
+  unfold not. intros. discriminate.
+  eapply T_App. apply T_Var. rewrite update_neq. rewrite update_neq.
+  rewrite update_eq. reflexivity.
+  intros contra. discriminate.
+  intros contra. discriminate.
+  apply T_Var. rewrite update_eq. reflexivity.
+Qed.
 
 (** We can also show that some terms are _not_ typable.  For example,
     let's check that there is no typing derivation assigning a type
@@ -839,7 +900,18 @@ Example typing_nonexample_3 :
         empty |-
           \x:S, x x \in T).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros contra. destruct contra as [S [T HC]].
+  inversion HC; subst; clear HC.
+  inversion H4; subst; clear H4.
+  inversion H2; subst; clear H2.
+  inversion H5; subst; clear H5.
+  inversion H1; subst.
+  inversion H2; clear H2.
+  inversion H1; clear H1.
+  induction T2; subst. inversion H0.
+  inversion H0; subst. apply IHT2_1.
+  auto.
+Qed.
 (** [] *)
 
 End STLC.

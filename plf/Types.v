@@ -180,7 +180,12 @@ Hint Unfold stuck : core.
 Example some_term_is_stuck :
   exists t, stuck t.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold stuck. unfold step_normal_form.
+  unfold not. exists (test zro zro zro).
+  split.
+  intros. destruct H. inversion H. inversion H4.
+  intros. inversion H; inversion H0.
+Qed.
 (** [] *)
 
 (** However, although values and normal forms are _not_ the same in
@@ -192,7 +197,19 @@ Proof.
 Lemma value_is_nf : forall t,
   value t -> step_normal_form t.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. inversion H.
+  - inversion H0;
+      unfold step_normal_form;
+      unfold not; intros; destruct H2; inversion H2.
+  - induction H0;
+      unfold step_normal_form;
+      unfold not; intros.
+    destruct H0. inversion H0.
+    unfold step_normal_form in IHnvalue. unfold not in IHnvalue.
+    apply IHnvalue. unfold value. right. apply H0.
+    destruct H1. inversion H1; subst.
+    exists t1'. apply H3.
+Qed.
 
 (** (Hint: You will reach a point in this proof where you need to
     use an induction to reason about a term that is known to be a
@@ -212,7 +229,53 @@ Proof.
 Theorem step_deterministic:
   deterministic step.
 Proof with eauto.
-  (* FILL IN HERE *) Admitted.
+  unfold deterministic.
+  intros. generalize dependent y2.
+  induction H; subst; intros.
+  - inversion H0; subst. auto.
+    inversion H4.
+  - inversion H0; subst. auto.
+    inversion H4.
+  - inversion H0; subst. inversion H.
+    inversion H. apply IHstep in H5.
+    rewrite H5. auto.
+  - inversion H0; subst. apply IHstep in H2.
+    rewrite H2. auto.
+  - inversion H0; subst. auto.
+    inversion H1.
+  - generalize dependent y2. induction H; intros.
+    + inversion H0; subst. auto.
+      inversion H1; subst. inversion H2.
+    + inversion H0; subst. auto.
+      inversion H2; subst. apply ST_Prd in H3.
+      apply IHnvalue in H3. rewrite H3 in *.
+      inversion H.
+  - inversion H0; subst. inversion H.
+    assert (value y2). {
+      right. auto.
+    }
+    apply value_is_nf in H1. unfold step_normal_form in H1.
+    inversion H; subst.
+    unfold not in H1. exfalso. apply H1. exists t1'0.
+    apply H4.
+    apply IHstep in H2. rewrite H2. auto.
+  - inversion H0. auto. inversion H1.
+  - generalize dependent y2. induction H; intros.
+    inversion H0; subst. auto.
+    inversion H1; subst. inversion H2.
+    apply IHnvalue. inversion H0; subst.
+    inversion H2; subst. constructor. apply H3.
+    inversion H2; subst. eapply ST_Iszro in H3.
+    apply IHnvalue in H3. inversion H3.
+  - inversion H0; subst. inversion H.
+    assert (value v). {
+      right. auto.
+    }
+    apply value_is_nf in H1. unfold step_normal_form in H1.
+    exfalso. unfold not in H1. apply H1. inversion H; subst.
+    exists t1'0. auto.
+    apply IHstep in H2. rewrite H2. auto.
+Qed.
 (** [] *)
 
 (* ================================================================= *)
@@ -319,7 +382,8 @@ Example scc_hastype_nat__hastype_nat : forall t,
   |- scc t \in Nat ->
   |- t \in Nat.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. inversion H; subst. apply H1.
+Qed.
 (** [] *)
 
 (* ----------------------------------------------------------------- *)
@@ -379,7 +443,28 @@ Proof.
     + (* t1 can take a step *)
       destruct H as [t1' H1].
       exists (test t1' t2 t3). auto.
-  (* FILL IN HERE *) Admitted.
+  - destruct IHHT.
+    + apply (nat_canonical t1 HT) in H.
+      destruct H. left. right. constructor. constructor.
+      left. right. constructor. constructor. auto.
+    + destruct H. right. exists (scc x). constructor.
+      apply H.
+  - destruct IHHT.
+    + apply (nat_canonical t1 HT) in H.
+      induction H. right. eauto.
+      destruct IHnvalue. inversion HT. apply H1.
+      inversion H0; inversion H1.
+      right. destruct H0. exists t. auto.
+    + destruct H. right. exists (prd x).
+      auto.
+  - destruct IHHT.
+    + apply (nat_canonical t1 HT) in H.
+      induction H. right. exists tru. constructor.
+      destruct IHnvalue. inversion HT. apply H1.
+      right. exists fls. auto.
+      right. exists fls. auto.
+    + destruct H. right. exists (iszro x). auto.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, advanced (finish_progress_informal) 
@@ -448,7 +533,16 @@ Proof.
       + (* ST_TestFls *) assumption.
       + (* ST_Test *) apply T_Test; try assumption.
         apply IHHT1; assumption.
-    (* FILL IN HERE *) Admitted.
+    - inversion HE; subst. apply IHHT in H0. constructor.
+      apply H0.
+    - inversion HE; subst.
+      + constructor.
+      + inversion HT. apply H1.
+      + apply IHHT in H0. constructor.
+        apply H0.
+    - inversion HE; try constructor; subst.
+      apply IHHT in H0. apply H0.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, advanced (finish_preservation_informal) 
@@ -499,7 +593,24 @@ Theorem preservation' : forall t t' T,
   t --> t' ->
   |- t' \in T.
 Proof with eauto.
-  (* FILL IN HERE *) Admitted.
+  intros. generalize dependent T. induction H0; intros.
+  - inversion H; subst. apply H5.
+  - inversion H; subst. apply H6.
+  - inversion H; subst. constructor.
+    apply IHstep in H4. apply H4. apply H6. apply H7.
+  - inversion H; subst. constructor. apply IHstep in H2.
+    apply H2.
+  - inversion H; subst. apply H1.
+  - inversion H0. inversion H2. apply H5.
+  - inversion H. apply IHstep in H2. constructor.
+    apply H2.
+  - inversion H. constructor.
+  - generalize dependent T. induction H; intros.
+    inversion H0; subst; intros. constructor.
+    inversion H0; subst. constructor.
+  - inversion H; subst. apply IHstep in H2.
+    constructor. apply H2.
+Qed.
 (** [] *)
 
 (** The preservation theorem is often called _subject reduction_,
@@ -542,7 +653,10 @@ Qed.
     counter-example in Coq, but feel free to do so.)
 
     (* FILL IN HERE *)
-*)
+ *)
+
+Print deterministic.
+
 (* Do not modify the following line: *)
 Definition manual_grade_for_subject_expansion : option (nat*string) := None.
 (** [] *)
@@ -560,11 +674,11 @@ Definition manual_grade_for_subject_expansion : option (nat*string) := None.
    else "becomes false." If a property becomes false, give a
    counterexample.
       - Determinism of [step]
-            (* FILL IN HERE *)
+            (* true *)
       - Progress
-            (* FILL IN HERE *)
+            (* false, prd (suc fls) *)
       - Preservation
-            (* FILL IN HERE *)
+            (* true *)
 *)
 (* Do not modify the following line: *)
 Definition manual_grade_for_variation1 : option (nat*string) := None.
