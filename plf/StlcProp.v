@@ -141,7 +141,14 @@ Theorem progress' : forall t T,
 Proof.
   intros t.
   induction t; intros T Ht; auto.
-  (* FILL IN HERE *) Admitted.
+  - inversion Ht; subst. inversion H1.
+  - apply progress in Ht.
+    destruct Ht. inversion H.
+    destruct H. right. exists x0. apply H.
+  - apply progress in Ht.
+    destruct Ht. inversion H.
+    destruct H. right. eexists. apply H.
+Qed.
 (** [] *)
 
 (* ################################################################# *)
@@ -182,6 +189,8 @@ Proof.
 
 (** Typing is preserved under "extensions" to the context [Gamma].
     (Recall the definition of "inclusion" from Maps.v.) *)
+
+Print inclusion.
 
 Lemma weakening : forall Gamma Gamma' t T,
      inclusion Gamma Gamma' ->
@@ -328,7 +337,22 @@ Proof.
   remember (x |-> U; Gamma) as Gamma'.
   generalize dependent Gamma.
   induction Ht; intros Gamma' G; simpl; eauto.
- (* FILL IN HERE *) Admitted.
+  - destruct (eqb_string x x0) eqn:Eb; subst.
+    + rewrite eqb_string_true_iff in Eb.
+      rewrite Eb in H. rewrite update_eq in H.
+      inversion H. rewrite <- H1.
+      apply weakening_empty. apply Hv.
+    + rewrite eqb_string_false_iff in Eb.
+      rewrite update_neq in H.
+      eauto. apply Eb.
+  - destruct (eqb_string x x0) eqn:Eb; subst.
+    + rewrite eqb_string_true_iff in Eb. subst.
+      constructor. rewrite update_shadow in Ht.
+      apply Ht.
+    + rewrite eqb_string_false_iff in Eb.
+      constructor. apply IHHt. apply update_permute.
+      apply Eb.
+Qed.
 (** [] *)
 
 (* ================================================================= *)
@@ -439,7 +463,23 @@ Proof.
   intros t t' T Hhas_type Hmulti. unfold stuck.
   intros [Hnf Hnot_val]. unfold normal_form in Hnf.
   induction Hmulti.
-  (* FILL IN HERE *) Admitted.
+  - inversion Hhas_type; subst.
+    + inversion H.
+    + apply Hnot_val. constructor.
+    + apply progress in Hhas_type. destruct Hnf.
+      destruct Hhas_type.
+      unfold not in Hnot_val. apply Hnot_val in H1.
+      inversion H1. apply H1.
+    + apply Hnot_val. constructor.
+    + apply Hnot_val. constructor.
+    + apply progress in Hhas_type. destruct Hhas_type.
+      apply Hnot_val in H2. inversion H2.
+      apply Hnf. apply H2.
+  - apply IHHmulti.
+    eapply preservation in H. apply H.
+    apply Hhas_type. apply Hnf.
+    apply Hnot_val.
+Qed.
 (** [] *)
 
 (* ################################################################# *)
@@ -455,7 +495,23 @@ Theorem unique_types : forall Gamma e T T',
   Gamma |- e \in T' ->
   T = T'.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. generalize dependent T'.
+  induction H; intros.
+  - inversion H0; subst. rewrite H in H3.
+    injection H3. intros. rewrite H1.
+    reflexivity.
+  - inversion H0; subst. assert (T1 = T0).
+    apply IHhas_type. apply H6.
+    rewrite H1. reflexivity.
+  - inversion H1; subst.
+    apply IHhas_type1 in H5.
+    apply IHhas_type2 in H7.
+    rewrite H7 in H5.
+    inversion H5. auto.
+  - inversion H0. reflexivity.
+  - inversion H0. reflexivity.
+  - inversion H2; subst. apply IHhas_type2. apply H9.
+Qed.
 (** [] *)
 
 (* ################################################################# *)
@@ -579,8 +635,14 @@ Proof.
   intros x t T Gamma H H0. generalize dependent Gamma.
   generalize dependent T.
   induction H;
-         intros; try solve [inversion H0; eauto].
-  (* FILL IN HERE *) Admitted.
+    intros; try solve [inversion H0; eauto].
+  inversion H1; subst.
+  specialize IHappears_free_in with T0 (y0 |-> T1; Gamma).
+  apply IHappears_free_in in H7.
+  destruct H7.
+  exists x0. rewrite update_neq in H2.
+  apply H2.  apply H.
+Qed.
 (** [] *)
 
 (** From the [free_in_context] lemma, it immediately follows that any
@@ -592,7 +654,16 @@ Corollary typable_empty__closed : forall t T,
     empty |- t \in T  ->
     closed t.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold closed, not. intros. generalize dependent T.
+  induction H0; intros; try solve [inversion H; eauto].
+  - inversion H; subst. inversion H2.
+  - inversion H1; subst.
+    specialize IHappears_free_in with T0.
+    apply IHappears_free_in.
+    eapply (free_in_context x0) in H7.
+    destruct H7. rewrite update_neq in H2.
+    inversion H2. apply H. apply H0.
+Qed.
 (** [] *)
 
 (** Next, we establish _context_invariance_.
@@ -646,7 +717,7 @@ Lemma context_invariance : forall Gamma Gamma' t T,
       under [Gamma].  But all free variables in [t1] are also free in
       [t1 t2], and similarly for [t2]; hence the desired result
       follows from the induction hypotheses. *)
-
+Print T_Abs.
 (** **** Exercise: 3 stars, standard, optional (context_invariance) 
 
     Complete the following proof. *)
@@ -654,7 +725,25 @@ Proof.
   intros.
   generalize dependent Gamma'.
   induction H; intros; auto.
-  (* FILL IN HERE *) Admitted.
+  - constructor. specialize H0 with x0.
+    induction H0. apply H. constructor.
+  - constructor. specialize IHhas_type with (x0 |-> T2; Gamma').
+    destruct IHhas_type; intros;
+      try destruct (eqb_string x0 x1) eqn:Eb;
+      try rewrite eqb_string_true_iff in Eb;
+      try rewrite eqb_string_false_iff in Eb;
+      auto.
+    + rewrite Eb in *. rewrite update_eq. rewrite update_eq. reflexivity.
+    + rewrite update_neq; try auto. rewrite update_neq; try auto.
+    + eapply T_App in h2. apply h2. apply h1.
+  - specialize IHhas_type1 with Gamma'.
+    specialize IHhas_type2 with Gamma'.
+    eapply T_App.
+    apply IHhas_type1. intros.
+    apply H1. apply afi_app1. apply H2.
+    apply IHhas_type2. intros.
+    apply H1. apply afi_app2. apply H2.
+Qed.
 (** [] *)
 
 (* ################################################################# *)
@@ -672,6 +761,10 @@ Proof.
 (* Do not modify the following line: *)
 Definition manual_grade_for_progress_preservation_statement : option (nat*string) := None.
 (** [] *)
+
+Print deterministic.
+Print preservation.
+Print progress.
 
 (** **** Exercise: 2 stars, standard (stlc_variation1) 
 
@@ -691,11 +784,11 @@ and the following typing rule:
     false, give a counterexample.
 
       - Determinism of [step]
-(* FILL IN HERE *)
+(* false, since arbitrary t can become zap *)
       - Progress
-(* FILL IN HERE *)
+(* true *)
       - Preservation
-(* FILL IN HERE *)
+(* no, the T could be arbitrary *)
 *)
 
 (* Do not modify the following line: *)
@@ -719,11 +812,11 @@ Definition manual_grade_for_stlc_variation1 : option (nat*string) := None.
     false, give a counterexample.
 
       - Determinism of [step]
-(* FILL IN HERE *)
+(* false *)
       - Progress
-(* FILL IN HERE *)
+(* true *)
       - Preservation
-(* FILL IN HERE *)
+(* false *)
 *)
 
 (* Do not modify the following line: *)
@@ -739,11 +832,11 @@ Definition manual_grade_for_stlc_variation2 : option (nat*string) := None.
     false, give a counterexample.
 
       - Determinism of [step]
-(* FILL IN HERE *)
+(* true *)
       - Progress
-(* FILL IN HERE *)
+(* false *)
       - Preservation
-(* FILL IN HERE *)
+(* true *)
 *)
 
 (* Do not modify the following line: *)
@@ -764,11 +857,11 @@ Definition manual_grade_for_stlc_variation3 : option (nat*string) := None.
     false, give a counterexample.
 
       - Determinism of [step]
-(* FILL IN HERE *)
+(* false, since we could have true or t1 *)
       - Progress
-(* FILL IN HERE *)
+(* no, t1 is missing *)
       - Preservation
-(* FILL IN HERE *)
+(* no, since we could have T for t1 or bool *)
 *)
 (** [] *)
 

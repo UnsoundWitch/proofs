@@ -31,10 +31,10 @@
       - [X] Hoare
       - [X] Hoare2
       - [X] HoareAsLogic
-      - [ ] Smallstep
-      - [ ] Types
-      - [ ] STLC
-      - [ ] STLCProp
+      - [X] Smallstep
+      - [X] Types
+      - [X] STLC
+      - [X] STLCProp
       - [ ] MoreSTLC
       - [ ] Sub
       - [ ] TypeChecking
