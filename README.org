@@ -35,7 +35,7 @@
       - [X] Types
       - [X] STLC
       - [X] STLCProp
-      - [ ] MoreSTLC
+      - [X] MoreSTLC
       - [ ] Sub
       - [ ] TypeChecking
       - [ ] Records
