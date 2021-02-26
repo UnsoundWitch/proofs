@@ -36,7 +36,7 @@
       - [X] STLC
       - [X] STLCProp
       - [X] MoreSTLC
-      - [ ] Sub
+      - [X] Sub
       - [ ] TypeChecking
       - [ ] Records
       - [ ] Reference
