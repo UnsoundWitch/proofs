@@ -58,6 +58,8 @@ inductive has_type :: "ctx \<Rightarrow> tm \<Rightarrow> ty \<Rightarrow> bool"
 | T_Let : "has_type \<Gamma> e1 T1 \<Longrightarrow>
            has_type ((i, T1)#\<Gamma>) e2 T2 \<Longrightarrow> has_type \<Gamma> (TLet i e1 e2) T2"
 
+print_theorems
+
 primrec subst :: "id \<Rightarrow> tm \<Rightarrow> tm \<Rightarrow> tm" where
   "subst _ _ (TmBool b) = (TmBool b)"
 | "subst _ _ (TmNat n) = (TmNat n)"
@@ -88,17 +90,47 @@ inductive step :: "tm \<Rightarrow> tm \<Rightarrow> bool" where
 | ST_App2: "is_val v1 \<Longrightarrow> step t2 t2' \<Longrightarrow> step (TmApp v1 t2) (TmApp v1 t2')"
 | ST_Let1: "step e1 e1' \<Longrightarrow> step (TmLet i e1 e2) (TmLet i e1' e2)"
 | ST_Let2: "is_val v1 \<Longrightarrow> step (TmLet i v1 e2) (subst i v1 e2)"
-| ST_Cong: "step e1 e2 \<Longrightarrow> step e2 e3 \<Longrightarrow> step e1 e3"
+| ST_Trans: "step e1 e2 \<Longrightarrow> step e2 e3 \<Longrightarrow> step e1 e3"
 
 print_theorems
 
 lemma example_1:
   shows "step (TmIf (TmOp Eq (TmNat 0) (TmNat 1)) (TmBool True) (TmBool False)) (TmBool False)"
-  apply (rule ST_Cong)
+  apply (rule ST_Trans)
    apply (rule ST_If1)
    apply (rule ST_OpRes; simp add:is_val.simps)
   apply simp
   by (rule ST_IfFalse)
+
+fun inclusion :: "ctx \<Rightarrow> ctx \<Rightarrow> bool" where
+  "inclusion [] [] = True"
+| "inclusion (x1#xs1) (x2#xs2) =
+     (if (x1 = x2) then False else inclusion xs1 xs2)"
+| "inclusion (x1#xs1) [] = False"
+| "inclusion [] (x2#xs2) = True"
+
+print_theorems
+
+
+lemma weakening : "has_type \<Gamma>1 t S \<Longrightarrow> inclusion \<Gamma>1 \<Gamma>2 \<Longrightarrow> has_type \<Gamma>2 t S" 
+  apply (induct t S arbitrary:\<Gamma>1 rule:has_type.induct)
+         apply (simp add:has_type.intros)+
+     apply (rule T_Var) 
+ 
+     apply (induct rule:inclusion.induct; auto)
+
+  sorry
+
+lemma context_inv_empty : "has_type [] t S \<Longrightarrow> has_type \<Gamma> t S"
+  using inclusion.elims(3) weakening by fastforce 
+
+lemma preservation : "step t t' \<Longrightarrow> has_type [] t T \<Longrightarrow>  has_type [] t' T"
+  apply (induct t t' rule:step.induct)
+  apply (erule T_If)
+  sorry
+
+lemma progress : "\<Gamma> = [] \<Longrightarrow> has_type \<Gamma> t T \<Longrightarrow> value t \<or> (\<exists> t'. step t t')"
+  sorry
 
 (*
 fun eval_op :: "op \<Rightarrow> tm \<Rightarrow> tm \<Rightarrow> tm option" where

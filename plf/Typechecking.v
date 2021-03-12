@@ -345,9 +345,33 @@ Fixpoint type_check (Gamma : context) (t : tm) : option ty :=
   (* Complete the following cases. *)
   
   (* sums *)
-  (* FILL IN HERE *)
+  | tm_inl ty2 t =>
+    match type_check Gamma t with
+    | Some ty1 => return Ty_Sum ty1 ty2
+    | _ => fail
+    end
+  | tm_inr ty1 t =>
+    match type_check Gamma t with
+    | Some ty2 => return Ty_Sum ty1 ty2
+    | _ => fail
+    end
+  | <{ case t of | inl x1 => t1 | inr x2 => t2 }> =>
+    match type_check Gamma t with
+    | Some (Ty_Sum ty1 ty2) =>
+      r1 <- type_check (x1 |-> ty1; Gamma) t1;;
+      r2 <- type_check (x2 |-> ty2; Gamma) t2;;
+      if eqb_ty r1 r2 then return r1 else fail
+    | _ => fail
+    end
   (* lists (the [tlcase] is given for free) *)
-  (* FILL IN HERE *)
+  | tm_nil ty => return Ty_List ty
+  | tm_cons t1 t2 =>
+    ty1 <- type_check Gamma t1;;
+    ty2 <- type_check Gamma t2;;
+    match ty2 with
+    | Ty_List ty3 => if eqb_ty ty1 ty3 then return Ty_List ty1 else fail
+    | _ => fail
+    end
   | <{ case t0 of | nil => t1 | x21 :: x22 => t2 }> =>
       match type_check Gamma t0 with
       | Some <{{List T}}> =>
@@ -360,14 +384,32 @@ Fixpoint type_check (Gamma : context) (t : tm) : option ty :=
       | _ => None
       end
   (* unit *)
-  (* FILL IN HERE *)
+  | tm_unit => return Ty_Unit
   (* pairs *)
-  (* FILL IN HERE *)
+  | tm_pair t1 t2 =>
+    ty1 <- type_check Gamma t1;;
+    ty2 <- type_check Gamma t2;;
+      return Ty_Prod ty1 ty2
+  | tm_fst t =>
+    match type_check Gamma t with
+    | Some (Ty_Prod ty1 ty2) => return ty1
+    | _ => fail
+    end
+  | tm_snd t =>
+    match type_check Gamma t with
+    | Some (Ty_Prod ty1 ty2) => return ty2
+    | _ => fail
+    end
   (* let *)
-  (* FILL IN HERE *)
+  | tm_let x t1 t2 =>
+    ty1 <- type_check Gamma t1;;
+    type_check (x |-> ty1; Gamma) t2
   (* fix *)
-  (* FILL IN HERE *)
-  | _ => None  (* ... and delete this line when you complete the exercise. *)
+  | tm_fix t =>
+    match type_check Gamma t with
+    | Some (Ty_Arrow t1 t2) => if eqb_ty t1 t2 then return t1 else fail
+    | _ => fail
+    end
   end.
 
 (** Just for fun, we'll do the soundness proof with just a bit more
@@ -391,6 +433,10 @@ Ltac fully_invert_typecheck Gamma t T T1 T2 :=
 Ltac case_equality S T :=
   destruct (eqb_ty S T) eqn: Heqb;
   inversion H0; apply eqb_ty__eq in Heqb; subst; subst; eauto.
+
+Search (?Gamma |- ?a \in ?T).
+
+Locate T_Mult.
 
 Theorem type_checking_sound : forall Gamma t T,
   type_check Gamma t = Some T ->
@@ -427,7 +473,18 @@ Proof with eauto.
     invert_typecheck Gamma t3 T3.
     destruct T1; try solve_by_invert.
     case_equality T2 T3.
-  (* FILL IN HERE *)
+  - invert_typecheck Gamma t0 ty1.
+  - invert_typecheck Gamma t0 ty2.
+  - invert_typecheck Gamma t1 ty1.
+    analyze ty1 ty1 ty2.
+    invert_typecheck (s |-> ty1; Gamma) t2 r1.
+    invert_typecheck (s0 |-> ty2; Gamma) t3 e2.
+    case_equality r1 e2. 
+  - auto.
+  - invert_typecheck Gamma t1 ty1.
+    invert_typecheck Gamma t2 ty2.
+    analyze ty2 ty3 ty4.
+    case_equality ty1 ty3.
   - (* tlcase *)
     rename s into x31, s0 into x32.
     fully_invert_typecheck Gamma t1 T1 T11 T12.
@@ -435,7 +492,17 @@ Proof with eauto.
     remember (x31 |-> T11 ; x32 |-> <{{List T11}}> ; Gamma) as Gamma'2.
     invert_typecheck Gamma'2 t3 T3.
     case_equality T2 T3.
-  (* FILL IN HERE *)
+  - auto.
+  - invert_typecheck Gamma t1 ty1.
+    invert_typecheck Gamma t2 ty2.
+  - invert_typecheck Gamma t ty1.
+    destruct ty1; try solve_by_invert.
+    invert_typecheck Gamma (tm_fst t) ty2.    
+  - fully_invert_typecheck Gamma t ty1 ty2 ty3.
+  - invert_typecheck Gamma t1 ty1.
+  - invert_typecheck Gamma t ty1.
+    analyze ty1 t1 t2.
+    case_equality t1 t2.
 Qed.
 
 Theorem type_checking_complete : forall Gamma t T,
@@ -453,11 +520,8 @@ Proof.
     try (rewrite (eqb_ty_refl T2));
     try (rewrite (eqb_ty_refl T3));
     eauto.
-    - destruct (Gamma x0); [assumption| solve_by_invert].
-      Admitted. (* ... and delete this line *)
-(* 
-Qed. (* ... and uncomment this one *)
-*)
+  - destruct (Gamma x0); [assumption| solve_by_invert].
+Qed. 
 End TypecheckerExtensions.
 (** [] *)
 
