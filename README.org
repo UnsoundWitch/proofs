@@ -38,7 +38,7 @@
       - [X] MoreSTLC
       - [X] Sub
       - [X] TypeChecking
-      - [ ] Records
+      - [X] Records
       - [ ] Reference
       - [ ] RecordsSub
       - [ ] Norm
