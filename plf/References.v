@@ -1,3 +1,4 @@
+
 (** * References: Typing Mutable References *)
 
 (** Up to this point, we have considered a variety of _pure_
@@ -500,7 +501,7 @@ Notation "t1 ; t2" := (tseq t1 t2) (in custom stlc at level 3).
 
 would it behave the same? *)
 
-(* FILL IN HERE *)
+(* no,it will retrieve  itself and cause a deadloop *)
 
 (* Do not modify the following line: *)
 Definition manual_grade_for_compact_update : option (nat*string) := None.
@@ -1846,24 +1847,34 @@ Qed.
     sure it gives the correct result when applied to the argument
     [4].) *)
 
-Definition factorial : tm
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Definition fac_fun : tm :=
+  <{ \y : Natural, if0 y then 1 else y * ((!r) (pred y)) }>.
+
+Definition factorial : tm :=
+  <{
+    \s : Natural,
+         (\r : Ref (Natural -> Natural),
+               ((r := fac_fun); (! r) s))
+           (ref (\s : Natural, 1))
+   }>.
 
 Lemma factorial_type : empty; nil |- factorial \in (Natural -> Natural).
 Proof with eauto.
-  (* FILL IN HERE *) Admitted.
+  repeat econstructor.
+Qed.
+
+(* just notice the name shadowing of x :< *)
 
 (** If your definition is correct, you should be able to just
     uncomment the example below; the proof should be fully
     automatic using the [reduce] tactic. *)
 
-(* 
 Lemma factorial_4 : exists st,
   <{ factorial 4 }> / nil -->* tm_const 24 / st.
 Proof.
   eexists. unfold factorial. reduce.
 Qed.
-*)
+
 (** [] *)
 
 (* ################################################################# *)

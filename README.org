@@ -6,49 +6,8 @@
 
 ** Coq
 
-   All proofs for Coq come from the book *Software Foundation*:
-
-   1. Logical Foundation
-      - [X] Basics
-      - [X] Induction
-      - [X] Lists
-      - [X] Poly
-      - [X] Tactics
-      - [X] Logic
-      - [ ] IndProp (partial)
-      - [X] Map
-      - [X] ProofObjects
-      - [X] IndPrinciples
-      - [X] Rel
-      - [ ] Imp (partial)
-      - [X] ImpParser
-      - [X] ImpCEvalFun
-      - [X] Extraction
-      - [X] Auto
-      - [X] AltAuto
-   2. Programming Language Foundations
-      - [ ] Equiv (partial)
-      - [X] Hoare
-      - [X] Hoare2
-      - [X] HoareAsLogic
-      - [X] Smallstep
-      - [X] Types
-      - [X] STLC
-      - [X] STLCProp
-      - [X] MoreSTLC
-      - [X] Sub
-      - [X] TypeChecking
-      - [X] Records
-      - [ ] Reference
-      - [ ] RecordsSub
-      - [ ] Norm
-      - [ ] LibTactics
-      - [ ] UseTactics
-      - [ ] UseAuto
-      - [ ] PE
-   3. Verified Functional Algorithms
-   4. Quickchick
-   5. Verifiable C
+   All proofs for Coq come from the book *Software Foundation*.
+   Checkout /SF.org/ for my reading progress.
 
 ** Isabelle
 
