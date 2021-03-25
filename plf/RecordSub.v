@@ -298,7 +298,12 @@ Example subtyping_example_1 :
   TRcd_kj <: TRcd_j.
 (* {k:A->A,j:B->B} <: {j:B->B} *)
 Proof with eauto.
-  (* FILL IN HERE *) Admitted.
+  unfold TRcd_kj, TRcd_j.
+  eapply S_Trans.
+  apply S_RcdPerm...
+  congruence.
+  apply S_RcdDepth...
+Qed.
 (** [] *)
 
 (** **** Exercise: 1 star, standard (subtyping_example_2)  *)
@@ -306,7 +311,9 @@ Example subtyping_example_2 :
   <{{ Top -> TRcd_kj }}> <:
           <{{ (C -> C) -> TRcd_j }}>.
 Proof with eauto.
-  (* FILL IN HERE *) Admitted.
+  apply S_Arrow. apply S_Top. auto.
+  apply subtyping_example_1.
+Qed.
 (** [] *)
 
 (** **** Exercise: 1 star, standard (subtyping_example_3)  *)
@@ -315,7 +322,8 @@ Example subtyping_example_3 :
           <{{ (k : B :: nil) -> nil }}>.
 (* {}->{j:A} <: {k:B}->{} *)
 Proof with eauto.
-  (* FILL IN HERE *) Admitted.
+  apply S_Arrow; apply S_RcdWidth; auto.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard (subtyping_example_4)  *)
@@ -323,7 +331,12 @@ Example subtyping_example_4 :
   <{{ x : A :: y : B :: z : C :: nil }}> <:
   <{{ z : C :: y : B :: x : A :: nil }}>.
 Proof with eauto.
-  (* FILL IN HERE *) Admitted.
+  eapply S_Trans.
+  apply S_RcdPerm... congruence.
+  apply S_Trans with  <{{  "y" : B ::  "z" : C ::  "x" : A :: nil }}>.
+  constructor... constructor... congruence.
+  apply S_RcdPerm... congruence.
+Qed.
 (** [] *)
 
 End Examples.
@@ -427,7 +440,15 @@ Proof with eauto.
   intros U V1 V2 Hs.
   remember <{{ V1 -> V2 }}> as V.
   generalize dependent V2. generalize dependent V1.
-  (* FILL IN HERE *) Admitted.
+  induction Hs; intros; try solve [try inversion HeqV]...
+  - inversion H; subst; try congruence.
+    inversion H2; subst.
+    exists V1, V2...
+  - apply IHHs2 in HeqV. destruct HeqV as [U1 [U2 [IHu1 [H1 H2]]]].
+    apply IHHs1 in IHu1. destruct IHu1 as [U3 [U4 [IHu2 [H3 H4]]]].
+    exists U3, U4...
+  - inversion HeqV; subst...
+Qed.
 (** [] *)
 
 (* ################################################################# *)
@@ -488,7 +509,9 @@ Example typing_example_0 :
   empty |- trcd_kj \in TRcd_kj.
 (* empty |- {k=(\z:A.z), j=(\z:B.z)} : {k:A->A,j:B->B} *)
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold trcd_kj, TRcd_kj.
+  repeat constructor.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard (typing_example_1)  *)
@@ -498,7 +521,19 @@ Example typing_example_1 :
               {k=(\z:A.z), j=(\z:B.z)}
          : B->B *)
 Proof with eauto.
-  (* FILL IN HERE *) Admitted.
+  unfold trcd_kj, TRcd_j.
+  econstructor.
+  repeat constructor.
+  econstructor.
+  repeat constructor.
+  auto.
+  econstructor.
+  repeat constructor.
+  eapply S_Trans.
+  apply S_RcdPerm...
+  congruence.
+  constructor...
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, optional (typing_example_2)  *)
@@ -509,7 +544,15 @@ Example typing_example_2 :
               (\z:C->C. {k=(\z:A.z), j=(\z:B.z)})
            : B->B *)
 Proof with eauto.
-  (* FILL IN HERE *) Admitted.
+  econstructor. repeat constructor.
+  econstructor. repeat constructor.
+  econstructor. repeat constructor.
+  constructor... auto.
+  constructor... unfold trcd_kj, TRcd_j.
+  eapply T_Sub. repeat constructor.
+  eapply S_Trans.  apply S_RcdPerm...
+  congruence. constructor...
+Qed.
 (** [] *)
 
 End Examples2.
@@ -572,6 +615,31 @@ Proof with eauto.
 (* ----------------------------------------------------------------- *)
 (** *** Progress *)
 
+Lemma nil_only_nil : forall Gamma T1,
+    Gamma |- nil \in T1 -> (Ty_RNil <: T1).
+Proof with eauto.
+  intros. remember <{nil}>.
+  induction H; inversion Heqt...
+Qed.
+
+Lemma rcons_only_rcons: forall Gamma i v1 vr S,
+    value v1 -> value vr ->
+    Gamma |- i := v1 :: vr \in S ->
+                             exists T1 T2, (Ty_RCons i T1 T2 <: S).
+Proof.
+  intros. 
+  remember <{i := v1 :: vr}>. 
+  induction H1; inversion Heqt; intros...
+  - eapply IHhas_type in H3...
+    destruct H3. destruct H3.
+    exists x, x0. eapply S_Trans... apply H3...
+    assumption.
+  - subst. exists T, Tr. constructor...
+    constructor. apply has_type__wf in H1_. assumption.
+    apply has_type__wf in H1_0. assumption.
+    assumption.
+Qed.
+  
 (** **** Exercise: 3 stars, standard (canonical_forms_of_arrow_types)  *)
 Lemma canonical_forms_of_arrow_types : forall Gamma s T1 T2,
      Gamma |- s \in (T1 -> T2) ->
@@ -579,7 +647,25 @@ Lemma canonical_forms_of_arrow_types : forall Gamma s T1 T2,
      exists x S1 s2,
         s = <{ \ x  : S1, s2 }>.
 Proof with eauto.
-  (* FILL IN HERE *) Admitted.
+  intros. remember <{{T1 -> T2}}>.
+  induction H; subst;
+    try solve [inversion H0];
+    try solve [inversion Heqt]...
+  - inversion H0; subst...
+    + exfalso.
+      apply nil_only_nil in H.
+      apply S_Trans with <{{nil}}> S <{{T1 -> T2}}> in H...
+      apply sub_inversion_arrow in H.
+      destruct H as [U1 [U2 [IHu1 [H2 H3]]]].
+      inversion IHu1.
+    + exfalso.
+      apply rcons_only_rcons in H...
+      destruct H. destruct H.
+      apply S_Trans with <{{  i : x :: x0 }}> S  <{{ T1 -> T2 }}> in H...
+      apply sub_inversion_arrow in H.
+      destruct H as [U1 [U2 [IHu1 [H4 H5]]]].
+      inversion IHu1.
+Qed.
 (** [] *)
 
 Theorem progress : forall t T,

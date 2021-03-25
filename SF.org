@@ -33,7 +33,7 @@
     - [X] TypeChecking
     - [X] Records
     - [X] Reference
-    - [ ] RecordsSub
+    - [X] RecordsSub
     - [ ] Norm
     - [ ] LibTactics
     - [ ] UseTactics

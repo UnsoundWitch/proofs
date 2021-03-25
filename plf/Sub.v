@@ -843,6 +843,7 @@ Inductive step : tm -> tm -> Prop :=
       t1 --> t1' ->
       tm_prod t1 t2 --> tm_prod t1' t2
   | ST_Prod2 : forall t1 t2 t2',
+      value t1 ->
       t2 --> t2' ->
       tm_prod t1 t2 --> tm_prod t1 t2'
   | ST_Fst1 : forall t t',
@@ -1184,8 +1185,9 @@ Proof with eauto.
   induction H; try solve_by_invert...
   - subst.
     apply sub_inversion_arrow in H1.
-    destruct H1 as [U1 [U2 [IH1 [IH2 IH3]]]].
-    subst.
+    destruct H1. destruct H1. destruct H1. destruct H2.
+    
+  
     
     admit.      
   
@@ -1270,8 +1272,9 @@ Lemma value_product: forall Gamma t T1 T2,
                   value t ->
                   value (tm_fst t) /\ value (tm_snd t).
 Proof.
-  intros. induction H; try solve_by_invert...
-
+  intros.
+  remember <{(T1 * T2)}>.
+  induction H; try solve_by_invert; subst...
 Admitted.
                   
 
@@ -1560,7 +1563,9 @@ Proof with eauto.
     + (* ST_AppAbs *)
       destruct (abs_arrow _ _ _ _ _ HT1) as [HA1 HA2].
       apply substitution_preserves_typing with T0...
-Qed.
+  - admit.
+  - admit.
+Admitted.
 
 (* ================================================================= *)
 (** ** Records, via Products and Top *)
