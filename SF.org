@@ -36,8 +36,8 @@
     - [X] RecordsSub
     - [ ] Norm
     - [ ] LibTactics
-    - [ ] UseTactics
-    - [ ] UseAuto
+    - [X] UseTactics
+    - [X] UseAuto
     - [ ] PE
 
  3. Verified Functional Algorithms

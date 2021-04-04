@@ -483,7 +483,7 @@ Lemma working_of_auto_1 : forall (P : nat->Prop),
   (* Hypothesis H3: *) (forall k, P (k + 1) -> P k) ->
   (* Goal:          *) (P 2).
 (* Uncomment "debug" in the following line to see the debug trace: *)
-Proof. intros P H1 H2 H3. (* debug *) eauto. Qed.
+Proof. intros P H1 H2 H3. debug eauto. Qed.
 
 (** The output message produced by [debug eauto] is as follows.
 
@@ -728,8 +728,14 @@ Theorem ceval_deterministic': forall c st st1 st2,
   st =[ c ]=> st2 ->
   st1 = st2.
 Proof.
-  (* FILL IN HERE *) admit.
-Admitted.
+  intros.
+  gen st2.
+  induction H; intros st2 E2; invert E2;
+    intros; subst; auto; try congruence.
+  - apply IHceval1 in H3. subst. auto.
+  - assert (st' = st'0) as EQ1. auto.
+    subst st'0. apply IHceval2. auto.
+Qed.
 
 (** In fact, using automation is not just a matter of calling [auto]
     in place of one or two other tactics. Using automation is about
@@ -870,8 +876,15 @@ Theorem preservation' : forall t t' T,
   t --> t'  ->
   empty |- t' \in T.
 Proof.
-  (* FILL IN HERE *) admit.
-Admitted.
+  introv HT. gen t'.
+  remember empty as Gamma.
+  induction HT;
+    introv HE; subst;
+      try solve [inverts* HE].
+  - invert* HE. intros. subst.
+    apply substitution_preserves_typing with T2.
+    invert* HT1. auto.
+Qed.
 
 (* ================================================================= *)
 (** ** Progress for STLC *)
