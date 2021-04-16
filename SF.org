@@ -41,6 +41,7 @@
     - [ ] PE
 
  3. Verified Functional Algorithms
+    - [X] Perm
 
  4. Quickchick
 

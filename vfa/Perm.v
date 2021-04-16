@@ -417,7 +417,10 @@ Print Permutation.
      - 3. [[1;1]] is NOT a permutation of [[1;2]].
      - 4. [[1;2;3;4]] IS a permutation of [[3;4;2;1]].
 
-   YOUR TASK: Add three more properties. Write them here: *)
+   YOUR TASK: Add three more properties. Write them here:
+      For the rest of perm_skip of A and B, they must be perm if A and B are perm 
+      If A and B are perm, the element occurence should be the same 
+      Perm have reflexitivity *)
 
 (** Now, let's examine all the theorems in the Coq library about
     permutations: *)
@@ -513,7 +516,13 @@ Check app_comm_cons.
 Example permut_example: forall (a b: list nat),
   Permutation (5 :: 6 :: a ++ b) ((5 :: b) ++ (6 :: a ++ [])).
 Proof.
-(* FILL IN HERE *) Admitted.
+  intros.
+  change ((5 :: b) ++ 6 :: a ++ []) with (5 :: b ++ 6 :: a ++ []).
+  apply perm_skip. rewrite app_nil_r.
+  change (6 :: a ++ b) with ((6 :: a) ++ b).
+  remember (6 :: a).
+  apply Permutation_app_comm.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard (not_a_permutation) 
@@ -527,7 +536,14 @@ Check Permutation_length_1_inv.
 Example not_a_permutation:
   ~ Permutation [1;1] [1;2].
 Proof.
-(* FILL IN HERE *) Admitted.
+  intro contra.
+  apply Permutation_sym in contra.
+  apply (Permutation_in 2) in contra. 
+  inversion contra.
+  - inversion H.
+  - inversion H. inversion H0. inversion H0.
+  - simpl. omega.
+Qed.
 (** [] *)
 
 (* ================================================================= *)
@@ -604,8 +620,18 @@ Ltac inv H := inversion H; clear H; subst.
 Theorem Forall_perm: forall {A} (f: A -> Prop) al bl,
   Permutation al bl ->
   Forall f al -> Forall f bl.
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof with auto.
+  intros.
+  induction H; auto.
+  - apply Forall_cons.
+    apply Forall_inv in H0...
+    apply IHPermutation. apply Forall_inv_tail in H0...
+  - apply Forall_cons.
+    apply Forall_inv_tail in H0. apply Forall_inv in H0...
+    apply Forall_cons.
+    apply Forall_inv in H0...
+    repeat apply Forall_inv_tail in H0...
+Qed.
 (** [] *)
 
 
