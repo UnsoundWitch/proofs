@@ -145,7 +145,21 @@ Lemma insert_sorted:
   forall a l, sorted l -> sorted (insert a l).
 Proof.
   intros a l S. induction S; simpl.
-  (* FILL IN HERE *) Admitted.
+  - constructor.
+  - bdestruct (x >=? a).
+    auto. 
+    constructor.
+    omega.
+    constructor.
+  - bdestruct (x >=? a).
+    try constructor; auto.
+    simpl in IHS.
+    bdestruct (y >=? a).
+    constructor. omega.
+    assumption.
+    constructor. omega.
+    assumption.
+Qed.
 
 (** [] *)
 
@@ -156,7 +170,11 @@ Proof.
 
 Theorem sort_sorted: forall l, sorted (sort l).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. induction l; simpl.
+  - constructor.
+  - apply insert_sorted.
+    assumption.
+Qed.
 
 (** [] *)
 
@@ -168,7 +186,17 @@ Proof.
 Lemma insert_perm: forall x l,
     Permutation (x :: l) (insert x l).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. generalize dependent x. induction l; intros; simpl.
+  - constructor.
+    constructor.
+  - bdestruct (a >=? x).
+    repeat constructor.
+    auto. 
+    eapply Permutation_trans.
+    apply perm_swap.
+    constructor.
+    apply IHl.
+Qed.
 
 (** [] *)
 
@@ -178,7 +206,13 @@ Proof.
 
 Theorem sort_perm: forall l, Permutation l (sort l).
 Proof.
-(* FILL IN HERE *) Admitted.
+  intros. induction l.
+  - auto.
+  - simpl.
+    eapply Permutation_trans.
+    constructor. apply IHl.
+    apply insert_perm.
+Qed.
 
 (** [] *)
 
@@ -189,7 +223,14 @@ Proof.
 Theorem insertion_sort_correct:
     is_a_sorting_algorithm sort.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold is_a_sorting_algorithm.
+  intros. induction al.
+  - auto.
+  - destruct IHal.
+    split.
+    apply sort_perm.
+    apply sort_sorted.
+Qed.
 
 (** [] *)
 
@@ -212,8 +253,9 @@ Lemma sorted_sorted': forall al, sorted al -> sorted' al.
     the sortedness of [al]. This proof is a bit tricky, so you may
     have to think about how to approach it, and try out one or two
     different ideas.*)
-Proof.
-(* FILL IN HERE *) Admitted.
+Proof with eauto.
+  unfold sorted'. intros.
+ (* FILL IN HERE *) Admitted.
 (** [] *)
 
 (** **** Exercise: 3 stars, advanced (sorted'_sorted)  *)
