@@ -42,6 +42,20 @@
 
  3. Verified Functional Algorithms
     - [X] Perm
+    - [ ] Sort
+    - [ ] Multiset
+    - [ ] BagPerm
+    - [ ] Selection
+    - [ ] Merge
+    - [ ] SearchTree
+    - [ ] ADT
+    - [ ] Extract
+    - [ ] Redblack
+    - [ ] Trie
+    - [ ] Priqueue
+    - [ ] Binom
+    - [ ] Decide
+    - [ ] Color
 
  4. Quickchick
 
