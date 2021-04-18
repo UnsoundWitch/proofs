@@ -246,6 +246,48 @@ Qed.
     But one way to build confidence in a specification is to state it
     in two different ways, then prove they are equivalent. *)
 
+Lemma tail_sorted : forall x l,
+    sorted (x :: l) -> sorted l.
+Proof.
+  intros. generalize dependent x.
+  induction l; intros.
+  - constructor.
+  - inversion H.
+    apply H4.
+Qed.
+
+Lemma nth_error_empty: forall i, @nth_error nat [] i = None.
+Proof.
+  intros. rewrite nth_error_None. apply Nat.le_0_l.
+Qed.
+
+Lemma tail_sorted' : forall x l,
+    sorted' (x :: l) -> sorted' l.
+Proof with auto.
+  unfold sorted'.
+  intros.
+  induction i; induction j; intros.
+  - inversion H0.
+  - apply H with 1 (S (S j))...
+    apply lt_n_S...
+  - inversion H0.
+  - apply H with (S (S i)) (S (S j))...
+    apply lt_n_S...
+Qed.
+
+Lemma lt_sorted_exchange : forall x y l,
+    x <= y -> sorted' (y :: l) -> sorted' (x :: l).
+Admitted.
+
+Lemma still_sorted' : forall x y l,
+  x <= y -> sorted' (y :: l) -> sorted' (x :: y :: l).
+Proof with eauto.
+  intros x y l.
+  generalize dependent x.
+  generalize dependent y.
+  unfold sorted'.
+Admitted.
+
 (** **** Exercise: 4 stars, advanced (sorted_sorted')  *)
 Lemma sorted_sorted': forall al, sorted al -> sorted' al.
 
@@ -254,17 +296,43 @@ Lemma sorted_sorted': forall al, sorted al -> sorted' al.
     have to think about how to approach it, and try out one or two
     different ideas.*)
 Proof with eauto.
-  unfold sorted'. intros.
- (* FILL IN HERE *) Admitted.
+  intros. induction H.
+  - unfold sorted' in *; intros.
+    rewrite nth_error_empty in *.
+    congruence.
+  - unfold sorted' in *; intros.
+    destruct i; destruct j; simpl in *;
+      try rewrite nth_error_empty in *;
+      try congruence.
+    omega.
+  - unfold sorted'; intros.
+    destruct i; destruct j; simpl in *.
+    + inversion H1.
+    + eapply (still_sorted' x y l) in IHsorted...
+    + inversion H1.
+    + apply IHsorted with i j...
+      omega.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, advanced (sorted'_sorted)  *)
 Lemma sorted'_sorted : forall al, sorted' al -> sorted al.
-Proof.
+Proof with eauto.
 (** Here, you can't do induction on the sortedness of the list,
     because [sorted'] is not an inductive predicate. But the proof
     is not hard. *)
-(* FILL IN HERE *) Admitted.
+  intros.
+  induction al.
+  - constructor.
+  - generalize dependent a.
+    induction al.
+    + constructor.
+    + intros.
+      constructor.
+      unfold sorted' in H.
+      apply H with 0 1...
+      apply tail_sorted' in H...
+Qed.
 (** [] *)
 
 (* ################################################################# *)
@@ -290,6 +358,7 @@ Lemma nth_error_insert : forall l a i iv,
     nth_error (insert a l) i = Some iv ->
     a = iv \/ exists i', nth_error l i' = Some iv.
 Proof.
+  intros.
 (* FILL IN HERE *) Admitted.
 
 Lemma insert_sorted':
