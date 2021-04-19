@@ -275,17 +275,23 @@ Proof with auto.
     apply lt_n_S...
 Qed.
 
-Lemma lt_sorted_exchange : forall x y l,
-    x <= y -> sorted' (y :: l) -> sorted' (x :: l).
+Lemma sort'_append : forall x y z,
+    sorted' (x ++ y) -> sorted' (y ++ z) -> sorted' (x ++ y ++ z).
+Proof with auto.
+Admitted.
+
+Lemma lt_any_sorted' : forall x i y l,
+    sorted' (x :: l) -> nth_error l i = Some y -> x <= y.
+Proof with auto.
+  unfold sorted'. intros.
 Admitted.
 
 Lemma still_sorted' : forall x y l,
   x <= y -> sorted' (y :: l) -> sorted' (x :: y :: l).
 Proof with eauto.
-  intros x y l.
-  generalize dependent x.
-  generalize dependent y.
-  unfold sorted'.
+  unfold sorted'. intros.
+  destruct i; destruct j.
+  inversion H1.
 Admitted.
 
 (** **** Exercise: 4 stars, advanced (sorted_sorted')  *)

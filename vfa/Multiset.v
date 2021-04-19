@@ -72,8 +72,9 @@ Lemma union_assoc: forall a b c : multiset,
 Proof.
   intros.
   extensionality x.
-  (* FILL IN HERE *) Admitted.
-
+  unfold union.
+  omega.
+Qed.
 (** [] *)
 
 (** **** Exercise: 1 star, standard (union_comm)  *)
@@ -83,7 +84,11 @@ Proof.
 Lemma union_comm: forall a b : multiset,
    union a b = union b a.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  extensionality x.
+  unfold union.
+  omega.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard (union_swap)  *)
@@ -95,7 +100,12 @@ Proof.
 Lemma union_swap : forall a b c : multiset,
     union a (union b c) = union b (union a c).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  rewrite union_comm.
+  rewrite <- union_assoc.
+  rewrite (union_comm c a).
+  reflexivity.
+Qed.
 
 (** [] *)
 
@@ -163,7 +173,18 @@ Definition is_a_sorting_algorithm' (f: list nat -> list nat) := forall al,
 Lemma insert_contents: forall x l,
      contents (insert x l) = contents (x :: l).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  induction l; simpl.
+  - reflexivity.
+  - bdestruct (a >=? x); simpl.
+    reflexivity.
+    rewrite IHl.
+    simpl.
+    rewrite union_assoc.
+    rewrite union_assoc.
+    rewrite (union_comm (singleton a) (singleton x)).
+    reflexivity.
+Qed.
 
 (** [] *)
 
@@ -175,7 +196,13 @@ Proof.
 Theorem sort_contents: forall l,
     contents l = contents (sort l).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. induction l; simpl.
+  - reflexivity.
+  - rewrite insert_contents.
+    simpl.
+    rewrite <- IHl.
+    reflexivity.
+Qed.
 
 (** [] *)
 
@@ -186,7 +213,17 @@ Proof.
 Theorem insertion_sort_correct :
   is_a_sorting_algorithm' sort.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold is_a_sorting_algorithm'.
+  intros.
+  induction al.
+  - auto.
+  - destruct IHal. split.
+    + rewrite sort_contents.
+      reflexivity.
+    + simpl.
+      apply insert_sorted.
+      auto.
+Qed.
 
 (** [] *)
 
@@ -196,12 +233,12 @@ Proof.
     of [insert_contents, sort_contents].  Which proofs are simpler?
 
       - [ ] easier with permutations
-      - [ ] easier with multisets
+      - [X] easier with multisets
       - [ ] about the same
 
    Regardless of "difficulty", which do you prefer or find easier to
    think about?
-      - [ ] permutations
+      - [X] permutations
       - [ ] multisets
 
    Put an X in one box in each list. *)
@@ -240,8 +277,16 @@ Definition manual_grade_for_permutations_vs_multiset : option (nat*string) := No
 Lemma perm_contents: forall al bl : list nat,
     Permutation al bl -> contents al = contents bl.
 Proof.
-  (* FILL IN HERE *) Admitted.
-
+  intros. induction H; try auto; simpl.
+  - rewrite IHPermutation. reflexivity.
+  - rewrite union_assoc.
+    rewrite (union_comm (singleton y) (singleton x)).
+    rewrite -> union_assoc.
+    reflexivity.
+  - rewrite IHPermutation1.
+    rewrite IHPermutation2.
+    reflexivity.
+Qed.
 (** [] *)
 
 (* ================================================================= *)
@@ -256,7 +301,16 @@ Proof.
 (** **** Exercise: 2 stars, advanced (contents_nil_inv)  *)
 Lemma contents_nil_inv : forall l, (forall x, 0 = contents l x) -> l = nil.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  induction l.
+  - reflexivity.
+  - specialize H with a.
+    simpl in H.
+    unfold union in H.
+    unfold singleton in H.
+    rewrite Nat.eqb_refl in H.
+    inversion H.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, advanced (contents_cons_inv)  *)
@@ -266,6 +320,10 @@ Lemma contents_cons_inv : forall l x n,
       l = l1 ++ x :: l2
       /\ contents (l1 ++ l2) x = n.
 Proof.
+  intro l.
+  induction l; intros; simpl.
+  - inversion H.
+  - destruct (Nat.eqb a x) eqn:Eb.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
@@ -273,7 +331,21 @@ Proof.
 Lemma contents_insert_other : forall l1 l2 x y,
     y <> x -> contents (l1 ++ x :: l2) y = contents (l1 ++ l2) y.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros l1.
+  induction l1; intros; simpl in *.
+  - unfold union. unfold singleton.
+    rewrite <- Nat.eqb_neq in H.
+    rewrite H.
+    reflexivity.
+  - unfold union. unfold singleton.
+    bdestruct (y =? a).
+    + rewrite Nat.add_cancel_l.
+      apply IHl1.
+      apply H.
+    + simpl.
+      apply IHl1.
+      apply H.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, advanced (contents_perm)  *)
@@ -302,8 +374,10 @@ Proof.
 Theorem same_contents_iff_perm: forall al bl,
     contents al = contents bl <-> Permutation al bl.
 Proof.
-  (* FILL IN HERE *) Admitted.
-
+  intros. split.
+  apply contents_perm.
+  apply perm_contents.
+Qed.
 (** [] *)
 
 (** Therefore the two specifications are equivalent. *)
@@ -313,7 +387,20 @@ Proof.
 Theorem sort_specifications_equivalent: forall sort,
     is_a_sorting_algorithm sort <-> is_a_sorting_algorithm' sort.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold is_a_sorting_algorithm'.
+  unfold is_a_sorting_algorithm.
+  intros. split; intro.
+  - split.
+    + rewrite same_contents_iff_perm.
+      destruct H with al.
+      apply H0.
+    + destruct H with al.
+      apply H1.
+  - split; destruct H with al.
+    + rewrite <- same_contents_iff_perm.
+      apply H0.
+    + apply H1.
+Qed.
 
 (** [] *)
 
