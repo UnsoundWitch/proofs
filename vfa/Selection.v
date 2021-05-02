@@ -152,8 +152,34 @@ Qed.
 Lemma select_perm: forall x l y r,
     (y, r) = select x l -> Permutation (x :: l) (y :: r).
 Proof.
-  (* FILL IN HERE *) Admitted.
-
+  intros x l.
+  generalize dependent x.
+  induction l; intros.
+  - inversion H.
+    repeat constructor.
+  - inversion H.
+    destruct (a >=? x) eqn:Eb.
+    + destruct (select x l) eqn:E.
+      inversion H1; subst.
+      econstructor.
+      apply perm_swap.
+      apply Permutation_sym.
+      econstructor.
+      apply perm_swap.
+      constructor.
+      apply Permutation_sym.
+      apply IHl.
+      auto.
+    + simpl in H. rewrite Eb in H.
+      destruct (select a l) eqn:E.
+      inversion H1; subst.
+      apply Permutation_sym.
+      econstructor.
+      apply perm_swap.
+      constructor.
+      apply Permutation_sym.
+      apply IHl; auto.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, standard (selsort_perm)  *)
@@ -164,7 +190,28 @@ Proof.
 Lemma selsort_perm: forall n l,
     length l = n -> Permutation l (selsort l n).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intro n.
+  induction n.
+  - intros. induction l.
+    constructor.
+    inversion H.
+  - induction l; intros.
+    + constructor. 
+    + simpl in H. inversion H. 
+      apply IHn in H1 as H2.
+      simpl. destruct (select a l) eqn:E.
+      assert (Permutation (a :: l) (n0 :: l0)). {
+        apply select_perm. auto.
+      }
+      apply Permutation_length in H0 as H3.
+      simpl in H3.
+      inversion H3; subst.
+      assert (Permutation (n0 :: l0) (n0 :: selsort l0 (length l))). {
+        constructor. apply IHn. auto.
+      }
+      econstructor.
+      apply H0. apply H1.
+Qed.
 
 (** [] *)
 
@@ -175,8 +222,11 @@ Proof.
 Lemma selection_sort_perm: forall l,
     Permutation l (selection_sort l).
 Proof.
-  (* FILL IN HERE *) Admitted.
-
+  induction l.
+  - constructor.
+  - apply selsort_perm.
+    auto.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard (select_rest_length)  *)
@@ -188,7 +238,13 @@ Proof.
 Lemma select_rest_length : forall x l y r,
     select x l = (y, r) -> length l = length r.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  symmetry in H.
+  apply select_perm in H.
+  apply Permutation_length in H.
+  simpl in H.
+  auto.
+Qed.
 
 (** [] *)
 
@@ -201,8 +257,20 @@ Lemma select_fst_leq: forall al bl x y,
     select x al = (y, bl) ->
     y <= x.
 Proof.
-  (* FILL IN HERE *) Admitted.
-
+  intros al.
+  induction al; intros.
+  - simpl in H. inversion H. auto.
+  - simpl in H.
+    destruct (a >=? x) eqn:E0.
+    + destruct (select x al) eqn:E1.
+      destruct bl. inversion H.
+      inversion H; subst.
+      eapply IHal. apply E1.
+    + destruct (select a al) eqn:E1.
+      destruct bl. inversion H.
+      inversion H; subst. rewrite Nat.leb_gt in E0.
+      apply IHal in E1. omega.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, standard (select_smallest)  *)
@@ -221,7 +289,28 @@ Lemma select_smallest: forall al bl x y,
     select x al = (y, bl) ->
     y <=* bl.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros al.
+  induction al; intros; unfold le_all in *.
+  - inversion H; subst. constructor.
+  - simpl in *.
+    destruct (a >=? x) eqn:E0.
+    + destruct (select x al) eqn:E1.
+      inversion H; subst.
+      apply IHal in E1 as E2.
+      constructor. apply select_fst_leq in E1.
+      rewrite Nat.leb_le in E0.
+      omega.
+      eapply IHal.
+      apply E1.
+    + destruct (select a al) eqn:E1.
+      destruct bl; inversion H; subst.
+      constructor.
+      rewrite Nat.leb_gt in E0.
+      apply select_fst_leq in E1.
+      omega.
+      eapply IHal.
+      apply E1.
+Qed.
 
 (** [] *)
 
@@ -234,8 +323,25 @@ Lemma select_in : forall al bl x y,
     select x al = (y, bl) ->
     In y (x :: al).
 Proof.
-  (* FILL IN HERE *) Admitted.
-
+  intro al. induction al; intros.
+  - simpl in H. inversion H; subst. constructor. reflexivity.
+  - apply select_fst_leq in H as H1.
+    simpl in H.
+    destruct (a >=? x) eqn:E0.
+    + destruct (select x al) eqn:E1.
+      inversion H; subst.
+      apply IHal in E1.
+      apply (in_cons a y (x::al)) in E1.
+      eapply Permutation_in.
+      Focus 2.
+      apply E1.
+      constructor.
+    + destruct (select a al) eqn:E1.
+      apply IHal in E1.
+      inversion H; subst.
+      eapply in_cons in E1.
+      apply E1.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, standard (cons_of_small_maintains_sort)  *)
@@ -251,8 +357,18 @@ Lemma cons_of_small_maintains_sort: forall bl y n,
     sorted (selsort bl n) ->
     sorted (y :: selsort bl n).
 Proof.
-  (* FILL IN HERE *) Admitted.
-
+  induction bl.
+  - intros. subst. simpl. constructor.
+  - intros.
+    induction n; intros.
+    inversion H.
+    simpl in *. destruct (select a bl) eqn:E0.
+    apply select_in in E0.
+    unfold le_all in H0.
+    rewrite Forall_forall in H0.
+    apply H0 in E0.
+    constructor; auto.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, standard (selsort_sorted)  *)
@@ -264,8 +380,24 @@ Proof.
 Lemma selsort_sorted : forall n al,
     length al = n -> sorted (selsort al n).
 Proof.
-  (* FILL IN HERE *) Admitted.
-
+  induction n; intros.
+  - rewrite length_zero_iff_nil in H.
+    subst. constructor.
+  - induction al.
+    inversion H.
+    simpl. destruct (select a al) eqn:E0.
+    apply cons_of_small_maintains_sort.
+    + inversion H.
+      eapply select_rest_length.
+      apply E0.
+    + eapply select_smallest.
+      apply E0.
+    + apply IHn.
+      inversion H.
+      symmetry.
+      eapply select_rest_length.
+      apply E0.
+Qed.
 (** [] *)
 
 (** **** Exercise: 1 star, standard (selection_sort_sorted)  *)
@@ -275,7 +407,12 @@ Proof.
 Lemma selection_sort_sorted : forall al,
     sorted (selection_sort al).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  induction al.
+  - constructor.
+  - apply selsort_sorted.
+    auto.
+Qed.
 
 (** [] *)
 
@@ -286,8 +423,12 @@ Proof.
 Theorem selection_sort_is_correct :
   is_a_sorting_algorithm selection_sort.
 Proof.
-  (* FILL IN HERE *) Admitted.
-
+  unfold is_a_sorting_algorithm.
+  intros.
+  split.
+  - apply selection_sort_perm.
+  - apply selection_sort_sorted.
+Qed.
 (** [] *)
 
 (** **** Exercise: 5 stars, advanced, optional (selection_sort_is_correct_multiset)  *)

@@ -1,5 +1,10 @@
 * SF
 
+  Some marks:
+  - = = not completed
+  - =-= partial completed (one or two proofs left)
+  - =X= all completed (except 5 stars) 
+
   1. Logical Foundation
      - [X] Basics
      - [X] Induction
@@ -7,12 +12,12 @@
      - [X] Poly
      - [X] Tactics
      - [X] Logic
-     - [ ] IndProp (partial)
+     - [-] IndProp
      - [X] Map
      - [X] ProofObjects
      - [X] IndPrinciples
      - [X] Rel
-     - [ ] Imp (partial)
+     - [-] Imp
      - [X] ImpParser
      - [X] ImpCEvalFun
      - [X] Extraction
@@ -20,7 +25,7 @@
      - [X] AltAuto
        
   2. Programming Language Foundations
-    - [ ] Equiv (partial)
+    - [-] Equiv
     - [X] Hoare
     - [X] Hoare2
     - [X] HoareAsLogic
@@ -42,10 +47,10 @@
 
  3. Verified Functional Algorithms
     - [X] Perm
-    - [ ] Sort
-    - [ ] Multiset
+    - [-] Sort
+    - [-] Multiset
     - [ ] BagPerm
-    - [ ] Selection
+    - [X] Selection
     - [ ] Merge
     - [ ] SearchTree
     - [ ] ADT
