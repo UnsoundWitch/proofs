@@ -39,21 +39,53 @@ Definition bag_eqv (b1 b2: bag) : Prop :=
 
 Lemma bag_eqv_refl : forall b, bag_eqv b b.
 Proof.
-(* FILL IN HERE *) Admitted.
+  induction b; constructor. Qed.
 
 Lemma bag_eqv_sym: forall b1 b2, bag_eqv b1 b2 -> bag_eqv b2 b1. 
 Proof.
-(* FILL IN HERE *) Admitted.
+  induction b2; unfold bag_eqv in *; intros.
+  - symmetry. apply H.
+  - simpl.
+    destruct (a=?n) eqn:E.
+    + rewrite Nat.eqb_eq in E.
+      subst. specialize H with n.
+      simpl in H.
+      rewrite Nat.eqb_refl in H.
+      omega.
+    + simpl.
+      specialize H with n.
+      simpl in H.
+      rewrite E in H.
+      omega.
+Qed.
 
 Lemma bag_eqv_trans: forall b1 b2 b3, bag_eqv b1 b2 -> bag_eqv b2 b3 -> bag_eqv b1 b3.
 Proof.
-(* FILL IN HERE *) Admitted.
+  unfold bag_eqv.
+  intros.
+  induction b2.
+  - rewrite H. rewrite H0. reflexivity.
+  - intros.
+    specialize H with n.
+    simpl in H.
+    destruct (a =? n) eqn:E0;
+      specialize H0 with n;
+      simpl in H0;
+      rewrite E0 in H0;
+      omega.
+Qed.
 
 (** The following little lemma is handy in a couple of places. *)
 
 Lemma bag_eqv_cons : forall x b1 b2, bag_eqv b1 b2 -> bag_eqv (x::b1) (x::b2).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold bag_eqv.
+  intros.
+  simpl.
+  destruct (x =? n) eqn:E;
+    specialize H with n;
+    omega.
+Qed.
 (** [] *)
 
 (* ################################################################# *)

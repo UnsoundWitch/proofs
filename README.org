@@ -7,7 +7,12 @@
 ** Coq
 
    All proofs for Coq come from the book *Software Foundation*.
-   Checkout /SF.org/ for my reading progress.
+   Checkout /SF.org/ for my reading progress:
+   - Logical Foundation
+   - Programming Language Foundation
+   - Verified Functional Algorithm
+   - Quickchick
+   - Verified C code
 
 ** Isabelle
 

@@ -1,30 +1,30 @@
 * SF
 
   Some marks:
-  - = = not completed
-  - =-= partial completed (one or two proofs left)
-  - =X= all completed (except 5 stars) 
+  - =[ ]= not completed
+  - =[-]= partial completed (one or two proofs left)
+  - =[X]= all completed (except 5 stars) 
 
-  1. Logical Foundation
-     - [X] Basics
-     - [X] Induction
-     - [X] Lists
-     - [X] Poly
-     - [X] Tactics
-     - [X] Logic
-     - [-] IndProp
-     - [X] Map
-     - [X] ProofObjects
-     - [X] IndPrinciples
-     - [X] Rel
-     - [-] Imp
-     - [X] ImpParser
-     - [X] ImpCEvalFun
-     - [X] Extraction
-     - [X] Auto
-     - [X] AltAuto
+  - Logical Foundation
+    - [X] Basics
+    - [X] Induction
+    - [X] Lists
+    - [X] Poly
+    - [X] Tactics
+    - [X] Logic
+    - [-] IndProp
+    - [X] Map
+    - [X] ProofObjects
+    - [X] IndPrinciples
+    - [X] Rel
+    - [-] Imp
+    - [X] ImpParser
+    - [X] ImpCEvalFun
+    - [X] Extraction
+    - [X] Auto
+    - [X] AltAuto
        
-  2. Programming Language Foundations
+  - [-] Programming Language Foundations
     - [-] Equiv
     - [X] Hoare
     - [X] Hoare2
@@ -45,7 +45,7 @@
     - [X] UseAuto
     - [ ] PE
 
- 3. Verified Functional Algorithms
+  - Verified Functional Algorithms
     - [X] Perm
     - [-] Sort
     - [-] Multiset
@@ -62,6 +62,6 @@
     - [ ] Decide
     - [ ] Color
 
- 4. Quickchick
+  - Quickchick
 
- 5. Verifiable C
+  - Verifiable C
