@@ -321,10 +321,37 @@ Lemma contents_cons_inv : forall l x n,
       /\ contents (l1 ++ l2) x = n.
 Proof.
   intro l.
-  induction l; intros; simpl.
+  induction l; intros; simpl in *.
   - inversion H.
-  - destruct (Nat.eqb a x) eqn:Eb.
-  (* FILL IN HERE *) Admitted.
+  - destruct (Nat.eqb x a) eqn:Eb.
+    + unfold union in H.
+      unfold singleton in H.
+      rewrite Eb in H. inversion H.
+      rewrite Nat.eqb_eq in Eb.
+      destruct n; subst.
+      {
+        exists [], l.
+        auto.
+      }
+      {
+        exists [], l.
+        auto.
+      }
+    + unfold union in H.
+      unfold singleton in H.
+      rewrite Eb in H.
+      simpl in H.
+      apply IHl in H.
+      destruct H. destruct H.
+      exists (a :: x0), (x1).
+      destruct H; subst.
+      split; simpl.
+      reflexivity.
+      unfold union.
+      unfold singleton.
+      rewrite Eb.
+      reflexivity.
+Qed.      
 (** [] *)
 
 (** **** Exercise: 2 stars, advanced (contents_insert_other)  *)
@@ -357,6 +384,34 @@ Proof.
   { rewrite H0. auto. }
   clear H0.
   generalize dependent bl.
+  induction al.
+  - intros.
+    destruct bl; auto.
+    simpl in H. specialize H with v.
+    unfold union in H.
+    unfold singleton in H.
+    unfold empty in H.
+    rewrite Nat.eqb_refl in H.
+    inversion H.
+  - intros.
+    induction bl.
+    specialize H with a.
+    simpl in H.
+    unfold union, singleton, empty in H.
+    rewrite Nat.eqb_refl in H.
+    inversion H.
+    destruct (a =? a0) eqn:Eb.
+    + rewrite Nat.eqb_eq in Eb.
+      subst. constructor.
+      apply IHal.
+      intros.
+      specialize H with x.
+      simpl in H.
+      unfold union, singleton in H.
+      bdestruct (x =? a0); omega.
+    + rewrite Nat.eqb_neq in Eb.
+      apply contents_insert_other with al bl a0 a in Eb.
+      admit.
 (* FILL IN HERE *) Admitted.
 (** [] *)
 

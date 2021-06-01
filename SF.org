@@ -39,7 +39,7 @@
     - [X] Records
     - [X] Reference
     - [X] RecordsSub
-    - [ ] Norm
+    - [-] Norm
     - [ ] LibTactics
     - [X] UseTactics
     - [X] UseAuto
@@ -49,7 +49,7 @@
     - [X] Perm
     - [-] Sort
     - [-] Multiset
-    - [ ] BagPerm
+    - [X] BagPerm
     - [X] Selection
     - [ ] Merge
     - [ ] SearchTree

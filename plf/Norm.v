@@ -620,7 +620,10 @@ Fixpoint R (T:ty) (t:tm) : Prop :=
    | <{ T1 -> T2 }> => (forall s, R T1 s -> R T2 <{t s}> )
 
    (* ... edit the next line when dealing with products *)
-   | <{ T1 * T2 }> => False    (* FILL IN HERE *)
+   | <{ T1 * T2 }> => match t with
+                     | <{(t1, t2)}> => R T1 t1 \/ R T2 t2
+                     | _ => False
+                     end
    end).
 
 (** As immediate consequences of this definition, we have that every
@@ -687,17 +690,24 @@ Proof.
  induction T;  intros t t' E Rt; unfold R; fold R; unfold R in Rt; fold R in Rt;
                destruct Rt as [typable_empty_t [halts_t RRt]].
   (* Bool *)
-  split. eapply preservation; eauto.
-  split. apply (step_preserves_halting _ _ E); eauto.
-  auto.
+  - split. eapply preservation; eauto.
+    split. apply (step_preserves_halting _ _ E); eauto.
+    auto.
   (* Arrow *)
-  split. eapply preservation; eauto.
-  split. apply (step_preserves_halting _ _ E); eauto.
-  intros.
-  eapply IHT2.
-  apply  ST_App1. apply E.
-  apply RRt; auto.
-  (* FILL IN HERE *) Admitted.
+  - split. eapply preservation; eauto.
+    split. apply (step_preserves_halting _ _ E); eauto.
+    intros.
+    eapply IHT2.
+    apply  ST_App1. apply E.
+    apply RRt; auto.
+  (* Products *)
+  - split. eapply preservation; eauto.
+    split. apply (step_preserves_halting _ _ E); eauto.
+    eapply preservation in typable_empty_t as H'.
+    Focus 2. apply E.
+    inversion typable_empty_t; simpl in *; subst; try contradiction.
+    inversion E; subst; destruct RRt; eauto.
+Qed.
 
 (** The generalization to multiple steps is trivial: *)
 
@@ -715,7 +725,20 @@ Qed.
 Lemma step_preserves_R' : forall T t t',
   empty |- t \in T -> (t --> t') -> R T t' -> R T t.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  induction T; intros; simpl in *;
+    destruct H1; destruct H2; split; try split; auto.
+  - unfold halts in *. destruct H2. destruct H2.
+    exists x. split; auto. apply multi_R in H0.
+    eapply multi_trans. apply H0. assumption.
+  - unfold halts in *. destruct H2. destruct H2.
+    exists x. split; auto. apply multi_R in H0.
+    eapply multi_trans. apply H0. assumption.
+  - intros. apply H3 in H4.
+    admit.
+  - destruct t'; try inversion H3; admit.
+  - admit.
+    
+      (* FILL IN HERE *) Admitted.
 
 Lemma multistep_preserves_R' : forall T t t',
   empty |- t \in T -> (t -->* t') -> R T t' -> R T t.
@@ -851,7 +874,72 @@ Lemma vacuous_substitution : forall  t x,
      ~ appears_free_in x t  ->
      forall t', <{ [x:=t']t }> = t.
 Proof with eauto.
-  (* FILL IN HERE *) Admitted.
+  induction t; intros; simpl...
+  - destruct (eqb_string x s) eqn:Eb...
+    exfalso. apply H. rewrite eqb_string_true_iff in Eb.
+    subst...
+  - specialize IHt1 with x t'.
+    specialize IHt2 with x t'.
+    assert (~ appears_free_in x t1). {
+      unfold not. intros.
+      apply H. apply afi_app1...
+    }
+    apply IHt1 in H0. rewrite H0.
+    assert (~ appears_free_in x t2). {
+      unfold not. intros.
+      apply H. apply afi_app2...
+    }
+    apply IHt2 in H1. rewrite H1...
+  - destruct (eqb_string x s) eqn:Eb...
+    specialize IHt with x t'.
+    rewrite eqb_string_false_iff in Eb.
+    assert (~ appears_free_in x t0). {
+      unfold not. intros.
+      apply H. constructor...
+    }
+    apply IHt in H0. rewrite H0...
+  - specialize IHt1 with x t'.
+    specialize IHt2 with x t'.
+    specialize IHt3 with x t'.
+    assert (~ appears_free_in x t1). {
+      unfold not. intros.
+      apply H. constructor...
+    }
+    assert (~ appears_free_in x t2). {
+      unfold not. intros.
+      apply H. apply afi_test1...
+    }
+    assert (~ appears_free_in x t3). {
+      unfold not. intros.
+      apply H. apply afi_test2...
+    }
+    apply IHt1 in H0. apply IHt2 in H1. apply IHt3 in H2.
+    rewrite H0, H1, H2...
+  - specialize IHt1 with x t'.
+    specialize IHt2 with x t'.
+    assert (~ appears_free_in x t1). {
+      unfold not. intros.
+      apply H. constructor...
+    }
+    assert (~ appears_free_in x t2). {
+      unfold not. intros.
+      apply H. apply afi_pair2...
+    }
+    apply IHt1 in H0. apply IHt2 in H1.
+    rewrite H0, H1...
+  - specialize IHt with x t'.
+    assert (~ appears_free_in x t). {
+      unfold not. intros.
+      apply H. constructor...
+    }
+    apply IHt in H0. rewrite H0...
+  - specialize IHt with x t'.
+    assert (~ appears_free_in x t). {
+      unfold not. intros.
+      apply H. constructor...
+    }
+    apply IHt in H0. rewrite H0...
+Qed.
 
 Lemma subst_closed: forall t,
      closed t  ->
@@ -905,7 +993,41 @@ Proof with eauto.
    + subst. simpl. rewrite <- eqb_string_refl. apply subst_closed...
    + subst. simpl. rewrite <- eqb_string_refl. rewrite subst_closed...
    + simpl. rewrite false_eqb_string... rewrite false_eqb_string...
-  (* FILL IN HERE *) Admitted.
+  - eapply IHt1 in H as H'. rewrite H'.
+    eapply IHt2 in H as H''. rewrite H''.
+    reflexivity. auto. auto. auto. auto.
+  - destruct (eqb_stringP x s); destruct (eqb_stringP x1 s);
+      simpl; subst.
+    + apply IHt with s s v v1 in H...
+      eapply duplicate_subst in H0.
+      eapply duplicate_subst in H1.
+      rewrite H1 in H. rewrite H0 in H.
+      rewrite H...
+    + rewrite <- eqb_string_refl.
+      rewrite <- eqb_string_false_iff in n.
+      rewrite n...
+    + rewrite <- eqb_string_refl.
+      rewrite <- eqb_string_false_iff in n.
+      rewrite n...
+    + rewrite <- eqb_string_false_iff in n, n0.
+      rewrite n, n0...
+      eapply IHt in H.
+      rewrite H...
+      assumption. assumption.
+  - reflexivity.
+  - reflexivity.
+  - specialize IHt1 with x x1 v v1.
+    specialize IHt2 with x x1 v v1.
+    specialize IHt3 with x x1 v v1.
+    destruct IHt1... destruct IHt2... destruct IHt3...
+  - specialize IHt1 with x x1 v v1.
+    specialize IHt2 with x x1 v v1.
+    destruct IHt1... destruct IHt2...
+  - specialize IHt with x x1 v v1.
+    destruct IHt...
+  - specialize IHt with x x1 v v1.
+    destruct IHt...
+Qed.
 
 (* ----------------------------------------------------------------- *)
 (** *** Properties of Multi-Substitutions *)
@@ -975,6 +1097,15 @@ Qed.
 (** You'll need similar functions for the other term constructors. *)
 
 (* FILL IN HERE *)
+
+Lemma msubst_if : forall ss t0 t1 t2, 
+    msubst ss <{ if t0 then t1 else t2 }> = <{ if {msubst ss t0} then {msubst ss t1} else {msubst ss t2} }>.
+Proof.
+ induction ss; intros.
+   reflexivity.
+   destruct a.
+    simpl. rewrite <- IHss. auto.
+Qed.
 
 (* ----------------------------------------------------------------- *)
 (** *** Properties of Multi-Extensions *)
@@ -1153,7 +1284,24 @@ Proof.
     rewrite msubst_app.
     destruct (IHHT1 c H env0 V) as [_ [_ P1]].
     pose proof (IHHT2 c H env0 V) as P2.  fold R in P1.  auto.
-
+  - simpl. split; try split; try rewrite msubst_closed; auto.
+    eapply typable_empty__closed. constructor.
+    unfold halts. exists <{true}>. split; constructor.
+    eapply typable_empty__closed. constructor.
+  - simpl. split; try split; try rewrite msubst_closed; auto.
+    eapply typable_empty__closed. constructor.
+    unfold halts. exists <{false}>. split; constructor.
+    eapply typable_empty__closed. constructor.
+  - specialize IHHT1 with c env0.
+    specialize IHHT2 with c env0.
+    specialize IHHT3 with c env0.
+    apply IHHT1 in H as H1; auto.
+    apply IHHT2 in H as H2; auto.
+    apply IHHT3 in H as H3; auto.
+    rewrite msubst_if. admit.
+  - admit.
+  - admit.
+  - admit.
   (* FILL IN HERE *) Admitted.
 
 (* ----------------------------------------------------------------- *)
