@@ -153,6 +153,10 @@ Proof.
  apply (@split_len' list_ind2).
 Qed.
 
+Ltac hsplit :=
+  match goal with
+  | [H: split ?a = ?b |- _] => solve [inv H; eauto]
+  end.
 (** **** Exercise: 3 stars, standard (split_perm)  *)
 
 (** Here's another fact about [split] that we will find useful later on.  
@@ -161,8 +165,14 @@ Qed.
 Lemma split_perm : forall {X:Type} (l l1 l2: list X),
     split l = (l1,l2) -> Permutation l (l1 ++ l2).
 Proof.
-  induction l as [| x | x1 x2 l1' IHl'] using list_ind2; intros.
-(* FILL IN HERE *) Admitted.
+  induction l as [| x | x1 x2 l1' IHl'] using list_ind2; intros;
+    try hsplit.
+  simpl in H. destruct (split l1') as [l1'' l2''] eqn:E.
+  inv H. subst. simpl.
+  econstructor. eapply Permutation_trans with (x2:: l1''++l2'').
+  econstructor. apply IHl'; auto.
+  apply Permutation_Add. apply Add_app.
+Qed.
 (** [] *)
 
 (* ================================================================= *)
@@ -455,7 +465,27 @@ Check mergesort_ind.
     We will start by showing that [mergesort] produces a sorted list.  The key 
     lemma is to show that [merge] of two sorted lists produces a sorted list.
     It is perhaps easiest to break out a sub-lemma first:
-*)
+ *)
+
+Ltac kill_sort_if :=
+  simpl in *;
+  match goal with
+  | [H: _ |- context[if ?A then _ else _]] => bdestruct A
+  | [H: context[if ?A then _ else _] |- _] => bdestruct A
+  | [H: _ |- sorted (?x0 :: ?x1 :: ?l)] => constructor
+  | [H: _ |- ?a <= ?b] => omega
+  | [H: ?P |- ?P] => assumption
+  | [H1: sorted (?a :: ?n :: ?l) |- _] => inversion H1; omega
+  end.
+
+
+Lemma merge_nil_r : forall l, merge l [] = l. 
+Proof.
+  intros. simpl.
+  destruct l.
+  - auto.
+  - auto. 
+Qed.
 
 (** **** Exercise: 2 stars, standard (sorted_merge1)  *)
 Lemma sorted_merge1 : forall x x1 l1 x2 l2,
@@ -463,25 +493,31 @@ Lemma sorted_merge1 : forall x x1 l1 x2 l2,
     sorted (merge (x1::l1) (x2::l2)) ->
     sorted (x :: merge (x1::l1) (x2::l2)).
 Proof.
-(* FILL IN HERE *) Admitted.
+  intros.
+  repeat kill_sort_if.
+Qed.
 (** [] *)
 
 (** **** Exercise: 4 stars, standard (sorted_merge)  *)
 Lemma sorted_merge : forall l1, sorted l1 ->
                      forall l2, sorted l2 ->
                      sorted (merge l1 l2).
-Proof.
+Proof with eauto.
   (* Hint: This is one unusual case where it is _much_ easier to do induction on 
      [l1] rather than on [sorted l1]. You will also need to do
      nested inductions on [l2]. *)
+  intro.
+  induction l1; intros; induction l2...
+  kill_sort_if.
+  apply IHl1 in H...
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard (mergesort_sorts)  *)
 Lemma mergesort_sorts: forall l, sorted (mergesort l).
-Proof. 
-  apply mergesort_ind; intros. (* Note that we use the special induction principle. *)
-(* FILL IN HERE *) Admitted.
+Proof with auto using sorted_merge. 
+  apply mergesort_ind; intros... (* Note that we use the special induction principle. *)
+Qed.
 (** [] *)
 
 (* ================================================================= *)
@@ -495,19 +531,30 @@ Proof.
     of permutations as multisets given in [Multiset] or [BagPerm] 
     and use that instead of [Permutation] if you think it will be easier. 
     (I'm not sure!)
-*)
+ *)
 
 (** **** Exercise: 3 stars, advanced (merge_perm)  *)
 Lemma merge_perm: forall (l1 l2: list nat),
     Permutation (l1 ++ l2) (merge l1 l2).
-Proof. 
+Proof with eauto.
   (* Hint: A nested induction on [l2] is required. *)
-  (* FILL IN HERE *) Admitted.
+  intro. induction l1; induction l2...
+  - simpl in *. econstructor...
+    specialize IHl1 with [].
+    rewrite merge_nil_r in IHl1...
+  - simpl. kill_sort_if. constructor. apply IHl1.
+    assert (a::l1 ++ a0 :: l2 = ([a] ++ l1) ++ [a0] ++ l2) by auto.
+    rewrite H0. econstructor.
+    apply Permutation_app_swap_app.
+    econstructor...
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, advanced (mergesort_perm)  *)
 Lemma mergesort_perm: forall l, Permutation l (mergesort l).
-Proof.
+Proof with eauto.
+  intros. destruct (split l) eqn:Eb.
+  destruct l...
   (* FILL IN HERE *) Admitted.
 (** [] *)
 

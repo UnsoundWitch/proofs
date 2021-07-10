@@ -51,7 +51,7 @@
     - [-] Multiset
     - [X] BagPerm
     - [X] Selection
-    - [ ] Merge
+    - [-] Merge
     - [ ] SearchTree
     - [ ] ADT
     - [ ] Extract
