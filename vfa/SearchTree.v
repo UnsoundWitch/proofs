@@ -205,8 +205,7 @@ Qed.
 Theorem empty_tree_BST : forall (V : Type),
     BST (@empty_tree V).
 Proof.
-  (* FILL IN HERE *) Admitted.
-
+  intros. unfold empty_tree. auto. Qed.
 (** [] *)
 
 (** **** Exercise: 4 stars, standard (insert_BST)  *)
@@ -216,20 +215,41 @@ Proof.
     Start by proving this helper lemma, which says that [insert]
     preserves any node predicate. Proceed by induction on [t]. *)
 
+Ltac bif :=
+  repeat match goal with
+  | [H: context[if ?A then _ else _] |- _] => bdestruct A; simpl in *
+  | [H: _ |- context[if ?A then _ else _]] => bdestruct A; simpl in *
+  end.
+
 Lemma ForallT_insert : forall (V : Type) (P : key -> V -> Prop) (t : tree V),
     ForallT P t -> forall (k : key) (v : V),
       P k v -> ForallT P (insert k v t).
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof with eauto.
+  intros. induction t; simpl...
+  bif.
+  - destruct H. destruct H2.
+    split...
+  - destruct H. destruct H3.
+    split...
+  - destruct H. destruct H3.
+    split...
+Qed.
 
 (** Now prove the main theorem. Proceed by induction on the evidence
     that [t] is a BST. *)
 
 Theorem insert_BST : forall (V : Type) (k : key) (v : V) (t : tree V),
     BST t -> BST (insert k v t).
-Proof.
-  (* FILL IN HERE *) Admitted.
-
+Proof with eauto using ForallT_insert.
+  intros.
+  induction t; intros.
+  - constructor; simpl...
+  - simpl. bif...
+    + inversion H; subst...
+    + inversion H; subst...
+    + inversion H; subst...
+      constructor; assert (k0 = k) by omega; subst...
+Qed.
 (** [] *)
 
 (** Since [empty_tree] and [insert] are the only operations that

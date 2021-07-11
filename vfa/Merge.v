@@ -291,7 +291,7 @@ Proof.
     destruct r2; simpl.  (* makes some progress *)
     + omega.
     + omega. 
-Qed.  
+Qed.
 
 Lemma merge_nil_l : forall l, merge [] l = l. 
 Proof.
@@ -478,7 +478,6 @@ Ltac kill_sort_if :=
   | [H1: sorted (?a :: ?n :: ?l) |- _] => inversion H1; omega
   end.
 
-
 Lemma merge_nil_r : forall l, merge l [] = l. 
 Proof.
   intros. simpl.
@@ -498,6 +497,14 @@ Proof.
 Qed.
 (** [] *)
 
+Lemma merge_direction : forall l1 l2 a b,
+    a < b -> merge l1 (a :: b :: l2) = a :: merge l1 (b :: l2).
+Proof with eauto.
+  intros.
+  simpl. repeat kill_sort_if...
+  rewrite <- merge2.
+Admitted.
+
 (** **** Exercise: 4 stars, standard (sorted_merge)  *)
 Lemma sorted_merge : forall l1, sorted l1 ->
                      forall l2, sorted l2 ->
@@ -508,9 +515,32 @@ Proof with eauto.
      nested inductions on [l2]. *)
   intro.
   induction l1; intros; induction l2...
-  kill_sort_if.
-  apply IHl1 in H...
-  (* FILL IN HERE *) Admitted.
+  kill_sort_if; simpl.
+  - rewrite <- merge2...
+    assert (a <=? a0 = true). rewrite Nat.leb_le...
+    destruct l1; destruct l2; simpl; try rewrite H2...
+    + assert (HE: sorted []) by constructor.
+      apply IHl2 in HE. inversion HE; subst...
+      bdestruct (a0 >=? n). constructor... inversion H...
+      rewrite <- merge2... apply IHl1 in H0...
+      constructor... constructor... omega.
+    + inversion H; subst. bdestruct (a0 >=? n). 
+      constructor... rewrite <- merge2...
+      bdestruct (n0 >=? n)...
+      -- repeat constructor... omega.
+         rewrite <- merge2... inversion H0...
+      -- repeat constructor... inversion H0...
+         bdestruct (n0 >=? a).
+         apply tail_sorted in H0. apply IHl2 in H0.
+         simpl in *. assert (n0 >=? n = false). rewrite Nat.leb_gt. omega.
+         rewrite H8 in H0. inversion H0...
+         inversion H0; subst. omega.
+  - destruct l2.
+    + constructor. omega. assumption.
+    + bdestruct (n >=? a);
+        inversion H0; subst;
+          try constructor; try omega...
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard (mergesort_sorts)  *)
@@ -552,10 +582,19 @@ Qed.
 
 (** **** Exercise: 3 stars, advanced (mergesort_perm)  *)
 Lemma mergesort_perm: forall l, Permutation l (mergesort l).
-Proof with eauto.
-  intros. destruct (split l) eqn:Eb.
-  destruct l...
-  (* FILL IN HERE *) Admitted.
+Proof with eauto using merge_perm.
+  intros. apply mergesort_ind...
+  intros. subst.
+  apply split_perm in e0.
+  econstructor... 
+  assert (Permutation (l1 ++ l2) (mergesort l1 ++ l2))
+    by (apply Permutation_app_tail; assumption).
+  assert (Permutation (l1 ++ l2) (mergesort l1 ++ mergesort l2)). {
+    econstructor...
+    apply Permutation_app_head... 
+  }.
+  econstructor...
+Qed.
 (** [] *)
 
 (** Putting it all together: *)
