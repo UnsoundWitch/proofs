@@ -383,8 +383,10 @@ Theorem bound_default :
     bound k t = false ->
     lookup d k t = d.
 Proof.
-  (* FILL IN HERE *) Admitted.
-
+  induction t; intros; simpl in *.
+  - reflexivity.
+  - bif; auto. inversion H.
+Qed.
 (** [] *)
 
 (* ################################################################# *)
@@ -444,15 +446,16 @@ Check t_update_permute :
     [insert], or [lookup].  Instead, use [lookup_insert_eq] and
     [lookup_insert_neq]. *)
 
+Ltac auto_lookup :=
+  subst || rewrite ?lookup_insert_eq, ?lookup_insert_neq by assumption || reflexivity.
+
 (** **** Exercise: 2 stars, standard, optional (lookup_insert_shadow)  *)
 
 Lemma lookup_insert_shadow :
   forall (V : Type) (t : tree V) (v v' d: V) (k k' : key),
     lookup d k' (insert k v (insert k v' t)) = lookup d k' (insert k v t).
-Proof.
-  intros. bdestruct (k =? k').
-  (* FILL IN HERE *) Admitted.
-
+Proof with eauto.
+  intros. bdestruct (k =? k'); subst; repeat auto_lookup... Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, optional (lookup_insert_same)  *)
@@ -460,9 +463,8 @@ Proof.
 Lemma lookup_insert_same :
   forall (V : Type) (k k' : key) (d : V) (t : tree V),
     lookup d k' (insert k (lookup d k t) t) = lookup d k' t.
-Proof.
-  (* FILL IN HERE *) Admitted.
-
+Proof with eauto.
+  intros. bdestruct (k =? k'); subst; simpl; auto_lookup... Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, optional (lookup_insert_permute)  *)
@@ -472,9 +474,13 @@ Lemma lookup_insert_permute :
     k1 <> k2 ->
     lookup d k' (insert k1 v1 (insert k2 v2 t))
     = lookup d k' (insert k2 v2 (insert k1 v1 t)).
-Proof.
-  (* FILL IN HERE *) Admitted.
-
+Proof with eauto.
+  intros. bdestruct (k' =? k1); subst; simpl.
+  - rewrite lookup_insert_eq... rewrite lookup_insert_neq...
+    rewrite lookup_insert_eq...
+  - bdestruct (k' =? k2); subst; simpl; repeat auto_lookup...
+    repeat rewrite lookup_insert_neq...
+Qed.
 (** [] *)
 
 (** Our ability to prove these lemmas without reference to the
@@ -511,14 +517,16 @@ Lemma insert_same_equality_breaks :
   exists (V : Type) (d : V) (t : tree V) (k : key),
       insert k (lookup d k t) t <> t.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  eexists. exists 1, E, 0.
+  simpl. congruence.
+Qed.
 
 Lemma insert_permute_equality_breaks :
   exists (V : Type) (v1 v2 : V) (k1 k2 : key) (t : tree V),
     k1 <> k2 /\ insert k1 v1 (insert k2 v2 t) <> insert k2 v2 (insert k1 v1 t).
-Proof.
-  (* FILL IN HERE *) Admitted.
-
+Proof with eauto.
+  eexists. exists 0, 1. exists 7, 6. exists (T E 5 1 E).
+  split; simpl; congruence. Qed.
 (** [] *)
 
 (* ################################################################# *)
