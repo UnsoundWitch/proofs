@@ -611,9 +611,19 @@ Definition elements_complete_spec :=
 (** Prove that [elements] is complete. Proceed by induction on [t]. *)
 
 Theorem elements_complete : elements_complete_spec.
-Proof.
-  (* FILL IN HERE *) Admitted.
-
+Proof with eauto.
+  unfold elements_complete_spec. intros. induction t; simpl in *.
+  - congruence.
+  - bif; simpl in *; inversion H; subst...
+    + apply IHt1 in H9...
+      apply in_or_app. left...
+    + apply IHt2 in H11...
+      apply in_or_app. right...
+      apply in_cons...
+    + assert (k = k0) by omega. subst.
+      apply in_or_app. right...
+      apply in_eq.
+Qed.
 (** [] *)
 
 (** The specification for correctness likewise mentions that the
@@ -662,8 +672,11 @@ Hint Transparent uncurry.
 Lemma elements_preserves_forall : forall (V : Type) (P : key -> V -> Prop) (t : tree V),
     ForallT P t ->
     Forall (uncurry P) (elements t).
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof with auto.
+  intros. induction t; simpl in *...
+  - destruct H. destruct H0.
+    apply Forall_app...
+Qed.
 
 (** [] *)
 
@@ -685,9 +698,13 @@ Lemma elements_preserves_relation :
     ForallT (fun y _ => R y k') t
     -> In (k, v) (elements t)
     -> R k k'.
-Proof.
-  (* FILL IN HERE *) Admitted.
-
+Proof with auto.
+  intros.
+  apply elements_preserves_forall in H.
+  rewrite Forall_forall in H.
+  apply H in H0.
+  simpl in *...
+Qed.
 (** [] *)
 
 (** **** Exercise: 4 stars, standard (elements_correct)  *)
@@ -696,9 +713,31 @@ Proof.
     evidence that [t] is a BST. *)
 
 Theorem elements_correct : elements_correct_spec.
-Proof.
-  (* FILL IN HERE *) Admitted.
-
+Proof with eauto.
+  unfold elements_correct_spec.
+  intros. induction t; simpl in *...
+  - intuition.
+  - bif; simpl in *; inversion H; subst...
+    + apply IHt1...
+      apply in_app_or in H0.
+      destruct H0...
+      inversion H0.
+      inversion H2; subst. omega.
+      eapply elements_preserves_relation in H2... omega.
+    + apply IHt2...
+      apply in_app_or in H0.
+      destruct H0...
+      eapply elements_preserves_relation in H0... omega.
+      inversion H0...
+      inversion H3; subst. omega.
+    + split...
+      apply in_app_or in H0.
+      destruct H0.
+      eapply elements_preserves_relation in H0... omega.
+      inversion H0.
+      inversion H3. subst...
+      eapply elements_preserves_relation in H3... omega.
+Qed.
 (** [] *)
 
 (** The inverses of completeness and correctness also should hold:
@@ -721,9 +760,10 @@ Theorem elements_complete_inverse :
     BST t ->
     bound k t = false ->
     ~ In (k, v) (elements t).
-Proof.
-  (* FILL IN HERE *) Admitted.
-
+Proof with eauto.
+  unfold not. intros.
+  apply elements_correct in H1...
+  congruence. Qed.
 (** [] *)
 
 (** **** Exercise: 4 stars, advanced (elements_correct_inverse)  *)
@@ -733,8 +773,14 @@ Proof.
 
 Lemma bound_value : forall (V : Type) (k : key) (t : tree V),
     bound k t = true -> exists v, forall d, lookup d k t = v.
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof with eauto.
+  intros. induction t; simpl in *...
+  - congruence.
+  - bif; simpl in *.
+    apply IHt1...
+    apply IHt2...
+    eexists v...
+Qed.
 
 (** Prove the main result.  You don't need induction. *)
 
@@ -743,9 +789,16 @@ Theorem elements_correct_inverse :
     BST t ->
     (forall v, ~ In (k, v) (elements t)) ->
     bound k t = false.
-Proof.
-  (* FILL IN HERE *) Admitted.
-
+Proof with eauto.
+  unfold not. intros.
+  destruct (bound k t) eqn:Eb...
+  apply bound_value in Eb as E'.
+  destruct E'.
+  exfalso.
+  apply H0 with x...
+  specialize H1 with x.
+  eapply elements_complete in H...
+Qed.
 (** [] *)
 
 (* ================================================================= *)
@@ -764,7 +817,12 @@ Lemma sorted_app: forall l1 l2 x,
   Sort.sorted l1 -> Sort.sorted l2 ->
   Forall (fun n => n < x) l1 -> Forall (fun n => n > x) l2 ->
   Sort.sorted (l1 ++ x :: l2).
-Proof.
+Proof with eauto.
+  induction l1; induction l2; intros; simpl in *...
+  - apply Forall_inv in H2.
+    constructor... omega.
+  - admit.
+  - admit.
   (* FILL IN HERE *) Admitted.
 
 (** [] *)
